@@ -12,7 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PriceBlock } from "@/components/shared/price-block";
 import { TeacherRow } from "@/components/shared/teacher-row";
-import { cn, formatNumber, hashToIndex, stripHtml } from "@/lib/utils";
+import { HtmlContent } from "@/components/shared/html-content";
+import { cn, formatNumber, hashToIndex } from "@/lib/utils";
 import type { Batch } from "@/types/batch";
 
 const CARD_GRADIENTS = [
@@ -35,7 +36,6 @@ interface BatchCardProps {
 export function BatchCard({ batch, href, compact, className }: BatchCardProps) {
   const link = href ?? `/discover/${batch.slug}`;
   const isFree = batch.totalPrice === 0 || batch.discountedPrice === 0;
-  const description = stripHtml(batch.description);
   const gradient =
     CARD_GRADIENTS[hashToIndex(batch.id || batch.slug || batch.name, CARD_GRADIENTS.length)];
 
@@ -108,10 +108,12 @@ export function BatchCard({ batch, href, compact, className }: BatchCardProps) {
           >
             {batch.name}
           </Link>
-          {!compact && description && (
-            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {description}
-            </p>
+          {!compact && batch.description && (
+            <HtmlContent
+              html={batch.description}
+              variant="clamp"
+              className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground"
+            />
           )}
         </div>
 

@@ -20,8 +20,8 @@ import { PriceBlock } from "@/components/shared/price-block";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GradientOrb } from "@/components/brand/gradient-orb";
 import { EnrollButton } from "@/features/discover/enroll-button";
+import { HtmlContent } from "@/components/shared/html-content";
 import { useTestSeries, useTestsInSeries } from "@/hooks/useTestSeries";
-import { stripHtml } from "@/lib/utils";
 
 interface TestSeriesDetailProps {
   slug: string;
@@ -81,10 +81,12 @@ export function TestSeriesDetail({ slug }: TestSeriesDetailProps) {
             <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               {series.title}
             </h1>
-            {stripHtml(series.description) && (
-              <p className="max-w-2xl text-balance text-sm leading-relaxed text-white/85 sm:text-base">
-                {stripHtml(series.description)}
-              </p>
+            {series.description && (
+              <HtmlContent
+                html={series.description}
+                variant="prose"
+                className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
+              />
             )}
           </div>
 

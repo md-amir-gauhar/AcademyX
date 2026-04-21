@@ -27,7 +27,8 @@ import { useBatch } from "@/hooks/useBatches";
 import { useSubjects } from "@/hooks/useCourse";
 import { useSchedulesByBatch } from "@/hooks/useSchedules";
 import { EnrollButton } from "@/features/discover/enroll-button";
-import { formatNumber, stripHtml } from "@/lib/utils";
+import { HtmlContent } from "@/components/shared/html-content";
+import { formatNumber } from "@/lib/utils";
 
 interface BatchDetailProps {
   slug: string;
@@ -105,10 +106,12 @@ export function BatchDetail({ slug }: BatchDetailProps) {
             <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               {batch.name}
             </h1>
-            {stripHtml(batch.description) && (
-              <p className="max-w-2xl text-balance text-sm leading-relaxed text-white/85 sm:text-base">
-                {stripHtml(batch.description)}
-              </p>
+            {batch.description && (
+              <HtmlContent
+                html={batch.description}
+                variant="prose"
+                className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
+              />
             )}
             {batch.teachers?.length > 0 && (
               <TeacherRow teachers={batch.teachers} max={4} size="md" />
@@ -216,10 +219,12 @@ export function BatchDetail({ slug }: BatchDetailProps) {
                   <p className="line-clamp-1 text-sm font-semibold">
                     {s.name}
                   </p>
-                  {stripHtml(s.description) && (
-                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                      {stripHtml(s.description)}
-                    </p>
+                  {s.description && (
+                    <HtmlContent
+                      html={s.description}
+                      variant="clamp"
+                      className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"
+                    />
                   )}
                   {s.teachers && s.teachers.length > 0 && (
                     <div className="mt-2">

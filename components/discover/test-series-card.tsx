@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Clock, FileText, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PriceBlock } from "@/components/shared/price-block";
-import { cn, hashToIndex, stripHtml } from "@/lib/utils";
+import { HtmlContent } from "@/components/shared/html-content";
+import { cn, hashToIndex } from "@/lib/utils";
 import type { TestSeries } from "@/types/test";
 
 const CARD_GRADIENTS = [
@@ -26,7 +27,6 @@ interface TestSeriesCardProps {
 export function TestSeriesCard({ series, href, className }: TestSeriesCardProps) {
   const link = href ?? `/tests/${series.slug}`;
   const isFree = series.isFree || series.discountedPrice === 0;
-  const description = stripHtml(series.description);
   const gradient =
     CARD_GRADIENTS[hashToIndex(series.id || series.slug || series.title, CARD_GRADIENTS.length)];
 
@@ -84,10 +84,12 @@ export function TestSeriesCard({ series, href, className }: TestSeriesCardProps)
           >
             {series.title}
           </Link>
-          {description && (
-            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {description}
-            </p>
+          {series.description && (
+            <HtmlContent
+              html={series.description}
+              variant="clamp"
+              className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground"
+            />
           )}
         </div>
 
