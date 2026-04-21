@@ -27,7 +27,7 @@ import { useBatch } from "@/hooks/useBatches";
 import { useSubjects } from "@/hooks/useCourse";
 import { useSchedulesByBatch } from "@/hooks/useSchedules";
 import { EnrollButton } from "@/features/discover/enroll-button";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, stripHtml } from "@/lib/utils";
 
 interface BatchDetailProps {
   slug: string;
@@ -105,9 +105,9 @@ export function BatchDetail({ slug }: BatchDetailProps) {
             <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               {batch.name}
             </h1>
-            {batch.description && (
+            {stripHtml(batch.description) && (
               <p className="max-w-2xl text-balance text-sm leading-relaxed text-white/85 sm:text-base">
-                {batch.description}
+                {stripHtml(batch.description)}
               </p>
             )}
             {batch.teachers?.length > 0 && (
@@ -216,9 +216,9 @@ export function BatchDetail({ slug }: BatchDetailProps) {
                   <p className="line-clamp-1 text-sm font-semibold">
                     {s.name}
                   </p>
-                  {s.description && (
+                  {stripHtml(s.description) && (
                     <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                      {s.description}
+                      {stripHtml(s.description)}
                     </p>
                   )}
                   {s.teachers && s.teachers.length > 0 && (

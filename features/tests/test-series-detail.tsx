@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { GradientOrb } from "@/components/brand/gradient-orb";
 import { EnrollButton } from "@/features/discover/enroll-button";
 import { useTestSeries, useTestsInSeries } from "@/hooks/useTestSeries";
+import { stripHtml } from "@/lib/utils";
 
 interface TestSeriesDetailProps {
   slug: string;
@@ -80,9 +81,9 @@ export function TestSeriesDetail({ slug }: TestSeriesDetailProps) {
             <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               {series.title}
             </h1>
-            {series.description && (
+            {stripHtml(series.description) && (
               <p className="max-w-2xl text-balance text-sm leading-relaxed text-white/85 sm:text-base">
-                {series.description}
+                {stripHtml(series.description)}
               </p>
             )}
           </div>
