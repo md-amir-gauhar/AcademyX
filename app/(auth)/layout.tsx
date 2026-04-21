@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { GradientOrb } from "@/components/brand/gradient-orb";
 import { Logo } from "@/components/brand/logo";
@@ -61,9 +60,9 @@ export default function AuthLayout({
 
       <div className="relative flex min-h-screen flex-col">
         <header className="flex items-center justify-between p-5 lg:p-6">
-          <Link href="/" className="lg:hidden">
+          <div className="lg:hidden">
             <Logo />
-          </Link>
+          </div>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
           </div>
