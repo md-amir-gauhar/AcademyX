@@ -2,6 +2,7 @@ import Image from "next/image";
 import { GradientOrb } from "@/components/brand/gradient-orb";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GuestGuard } from "@/features/auth/guest-guard";
 
 export default function AuthLayout({
   children,
@@ -9,6 +10,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
+    <GuestGuard>
     <div className="relative min-h-screen lg:grid lg:grid-cols-[1.1fr_1fr]">
       <div className="relative hidden overflow-hidden bg-gradient-brand lg:block">
         <GradientOrb color="violet" size="xl" className="-top-20 left-1/2 -translate-x-1/2 opacity-80" />
@@ -72,5 +74,6 @@ export default function AuthLayout({
         </main>
       </div>
     </div>
+    </GuestGuard>
   );
 }
