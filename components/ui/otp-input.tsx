@@ -23,6 +23,12 @@ export function OTPInput({
   onComplete,
 }: OTPInputProps) {
   const inputsRef = React.useRef<Array<HTMLInputElement | null>>([]);
+  const lastFiredRef = React.useRef<string | null>(null);
+  const onCompleteRef = React.useRef(onComplete);
+
+  React.useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   React.useEffect(() => {
     if (autoFocus) {
@@ -30,9 +36,18 @@ export function OTPInput({
     }
   }, [autoFocus]);
 
+  // Fire onComplete exactly once per unique completed value. We deliberately
+  // latch the last-fired value in a ref so that prop identity churn (e.g. a
+  // parent re-rendering with a new onComplete reference) does not re-trigger
+  // the callback while the input is still at full length.
   React.useEffect(() => {
-    if (value.length === length) onComplete?.(value);
-  }, [value, length, onComplete]);
+    if (value.length === length && lastFiredRef.current !== value) {
+      lastFiredRef.current = value;
+      onCompleteRef.current?.(value);
+    } else if (value.length < length) {
+      lastFiredRef.current = null;
+    }
+  }, [value, length]);
 
   const setDigit = (idx: number, digit: string) => {
     const clean = digit.replace(/\D/g, "").slice(0, 1);

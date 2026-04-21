@@ -25,17 +25,17 @@ const NAV: Array<{
   soon?: boolean;
 }> = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
-  { label: "Discover", href: "/discover", icon: Compass, soon: true },
-  { label: "My batches", href: "/my-batches", icon: GraduationCap, soon: true },
-  { label: "Live classes", href: "/live", icon: Video, soon: true },
-  { label: "Tests", href: "/tests", icon: Trophy, soon: true },
+  { label: "Discover", href: "/discover", icon: Compass },
+  { label: "My batches", href: "/my-batches", icon: GraduationCap },
+  { label: "Live classes", href: "/live", icon: Video },
+  { label: "Tests", href: "/tests", icon: Trophy },
   { label: "Practice", href: "/practice", icon: BookOpen, soon: true },
   { label: "Community", href: "/community", icon: MessagesSquare, soon: true },
 ];
 
 const FOOTER_NAV = [
-  { label: "Billing", href: "/billing", icon: CreditCard, soon: true },
-  { label: "Settings", href: "/settings", icon: Settings, soon: true },
+  { label: "Billing", href: "/billing", icon: CreditCard },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function DashboardSidebar() {
@@ -84,7 +84,9 @@ function NavLink({
   item: { label: string; href: string; icon: React.ComponentType<{ className?: string }>; soon?: boolean };
   pathname: string;
 }) {
-  const active = pathname === item.href;
+  const active =
+    pathname === item.href ||
+    (item.href !== "/" && pathname.startsWith(`${item.href}/`));
   return (
     <Link
       href={item.soon ? "#" : item.href}

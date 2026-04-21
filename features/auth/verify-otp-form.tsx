@@ -7,14 +7,13 @@ import { ArrowLeft, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OTPInput } from "@/components/ui/otp-input";
 import { useRequestOtp, useVerifyOtp } from "@/hooks/useOtp";
-import { useAuthStore, selectNeedsProfile } from "@/store/authStore";
+import { useAuthStore } from "@/store/authStore";
 
 const RESEND_SECONDS = 30;
 
 export function VerifyOtpForm() {
   const router = useRouter();
   const pendingLogin = useAuthStore((s) => s.pendingLogin);
-  const needsProfile = useAuthStore(selectNeedsProfile);
 
   const verify = useVerifyOtp();
   const resend = useRequestOtp();
@@ -33,32 +32,38 @@ export function VerifyOtpForm() {
     return () => window.clearInterval(id);
   }, [seconds]);
 
+  // Keep latest mutation in a ref so handleSubmit can remain a stable
+  // callback across renders (prevents child effects from re-firing).
+  const verifyRef = React.useRef(verify);
+  React.useEffect(() => {
+    verifyRef.current = verify;
+  }, [verify]);
+
   const handleSubmit = React.useCallback(
     async (code: string) => {
-      if (!pendingLogin || code.length !== 6) return;
-      await verify.mutateAsync(
+      const pending = useAuthStore.getState().pendingLogin;
+      if (!pending || code.length !== 6) return;
+      await verifyRef.current.mutateAsync(
         {
-          countryCode: pendingLogin.countryCode,
-          phoneNumber: pendingLogin.phoneNumber,
-          organizationId: pendingLogin.organizationId,
+          countryCode: pending.countryCode,
+          phoneNumber: pending.phoneNumber,
+          organizationId: pending.organizationId,
           otp: code,
         },
         {
           onSuccess: () => {
-            // decide where to send them:
-            setTimeout(() => {
-              if (useAuthStore.getState().user?.username) {
-                router.replace("/dashboard");
-              } else {
-                router.replace("/complete-profile");
-              }
-            }, 0);
+            const user = useAuthStore.getState().user;
+            if (user?.username) {
+              router.replace("/dashboard");
+            } else {
+              router.replace("/complete-profile");
+            }
           },
           onError: () => setOtp(""),
         }
       );
     },
-    [pendingLogin, verify, router]
+    [router]
   );
 
   const handleResend = async () => {
@@ -73,11 +78,6 @@ export function VerifyOtpForm() {
   };
 
   if (!pendingLogin) return null;
-  // small workaround: when verify succeeds and user was existing, we want to
-  // navigate; this also catches the case when the effect above hasn't run.
-  if (verify.isSuccess && !needsProfile) {
-    router.replace("/dashboard");
-  }
 
   return (
     <div className="space-y-8">

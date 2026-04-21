@@ -58,3 +58,35 @@ export function safeJsonParse<T>(input: string | null, fallback: T): T {
     return fallback;
   }
 }
+
+/**
+ * Strip HTML tags and decode common entities so API-provided HTML descriptions
+ * render as clean plain text (the API frequently returns `<p>…</p>` wrapped
+ * strings). Safe for rendering in text contexts.
+ */
+export function stripHtml(html?: string | null): string {
+  if (!html) return "";
+  const decoded = html
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+  return decoded;
+}
+
+/** Deterministic color index from a string — used to give each card a stable
+ * gradient even when the API doesn't send a thumbnail. */
+export function hashToIndex(input: string, buckets: number) {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % buckets;
+}

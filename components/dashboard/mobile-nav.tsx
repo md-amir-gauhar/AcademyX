@@ -18,7 +18,9 @@ export function MobileBottomNav() {
   return (
     <nav className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-border/60 bg-background/90 backdrop-blur-xl lg:hidden">
       {TABS.map((t) => {
-        const active = pathname === t.href;
+        const active =
+          pathname === t.href ||
+          (t.href !== "/" && pathname.startsWith(`${t.href}/`));
         return (
           <Link
             key={t.href}

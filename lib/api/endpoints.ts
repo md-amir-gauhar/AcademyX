@@ -46,25 +46,37 @@ export const endpoints = {
   },
   testSeries: {
     list: "/test-series",
-    byId: (id: string) => `/test-series/${id}`,
+    mine: "/test-series/my-test-series",
+    byIdOrSlug: (idOrSlug: string) => `/test-series/${idOrSlug}`,
+    tests: (seriesId: string) => `/test-series/${seriesId}/tests`,
+    checkout: (seriesId: string) => `/test-series/${seriesId}/checkout`,
+    enrollFree: (seriesId: string) => `/test-series/${seriesId}/enroll-free`,
+    verifyPayment: "/test-series/verify-payment",
   },
   tests: {
-    byId: (id: string) => `/tests/${id}`,
+    byIdOrSlug: (idOrSlug: string) => `/tests/${idOrSlug}`,
+    preview: (testId: string) => `/tests/${testId}/preview`,
   },
   attempts: {
     start: (testId: string) => `/attempts/start/${testId}`,
-    submit: (attemptId: string) => `/attempts/${attemptId}/submit`,
     byId: (attemptId: string) => `/attempts/${attemptId}`,
-    mine: "/attempts/mine",
+    answer: (attemptId: string) => `/attempts/${attemptId}/answer`,
+    submit: (attemptId: string) => `/attempts/${attemptId}/submit`,
+    results: (attemptId: string) => `/attempts/${attemptId}/results`,
+    solutions: (attemptId: string) => `/attempts/${attemptId}/solutions`,
+    myAttempts: (testId: string) => `/attempts/test/${testId}/my-attempts`,
+    leaderboard: (testId: string) => `/attempts/test/${testId}/leaderboard`,
+    recentCompleted: "/attempts/recent-completed",
+    stats: "/attempts/stats",
   },
   profile: {
     me: "/profile",
   },
   orders: {
-    mine: "/orders",
-    byId: (id: string) => `/orders/${id}`,
+    history: "/orders/history",
   },
   upload: {
+    image: "/upload/image",
     avatar: "/upload/avatar",
   },
 } as const;

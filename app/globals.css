@@ -150,3 +150,149 @@
     mask-image: linear-gradient(to right, #000 80%, transparent 100%);
   }
 }
+
+/* ==========================================================================
+   Rich-text renderers (HtmlContent)
+   -------------------------------------------------------------------------- */
+
+/* Inline: single-line friendly. Strips all block spacing, collapses paragraphs
+   into spaces. Use when the host already controls line-height/size. */
+.rich-inline,
+.rich-inline * {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.rich-inline br {
+  display: none !important;
+}
+
+/* Clamp: for card descriptions. Normalises paragraph margins so line-clamp
+   works predictably across multiple <p> elements. */
+.rich-clamp > :first-child {
+  margin-top: 0;
+}
+.rich-clamp > :last-child {
+  margin-bottom: 0;
+}
+.rich-clamp p,
+.rich-clamp div {
+  margin: 0;
+}
+.rich-clamp p + p,
+.rich-clamp br + * {
+  margin-top: 0.25rem;
+}
+.rich-clamp ul,
+.rich-clamp ol {
+  margin: 0;
+  padding-left: 1rem;
+}
+.rich-clamp li {
+  list-style: disc;
+}
+.rich-clamp strong,
+.rich-clamp b {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.rich-clamp em,
+.rich-clamp i {
+  font-style: italic;
+}
+
+/* Prose: full rich-text for hero / detail descriptions. */
+.rich-prose {
+  line-height: 1.7;
+}
+.rich-prose > :first-child {
+  margin-top: 0;
+}
+.rich-prose > :last-child {
+  margin-bottom: 0;
+}
+.rich-prose p {
+  margin: 0.75em 0;
+}
+.rich-prose h1,
+.rich-prose h2,
+.rich-prose h3,
+.rich-prose h4 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  margin: 1.25em 0 0.5em;
+  line-height: 1.25;
+}
+.rich-prose h1 { font-size: 1.5rem; }
+.rich-prose h2 { font-size: 1.25rem; }
+.rich-prose h3 { font-size: 1.125rem; }
+.rich-prose h4 { font-size: 1rem; }
+.rich-prose ul,
+.rich-prose ol {
+  margin: 0.75em 0;
+  padding-left: 1.25rem;
+}
+.rich-prose ul { list-style: disc; }
+.rich-prose ol { list-style: decimal; }
+.rich-prose li {
+  margin: 0.25em 0;
+}
+.rich-prose li::marker {
+  color: hsl(var(--primary));
+}
+.rich-prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rich-prose a:hover {
+  text-decoration-thickness: 2px;
+}
+.rich-prose strong,
+.rich-prose b {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.rich-prose em,
+.rich-prose i {
+  font-style: italic;
+}
+.rich-prose blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.6);
+  margin: 1em 0;
+  padding: 0.25em 0 0.25em 1rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+.rich-prose code {
+  background: hsl(var(--muted));
+  padding: 0.125em 0.375em;
+  border-radius: 0.375rem;
+  font-size: 0.9em;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+.rich-prose pre {
+  background: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  margin: 0.75em 0;
+}
+.rich-prose pre code {
+  background: transparent;
+  padding: 0;
+}
+.rich-prose mark {
+  background: hsl(var(--warning) / 0.35);
+  color: inherit;
+  padding: 0 0.125em;
+  border-radius: 0.25rem;
+}
+.rich-prose hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 1.5em 0;
+}
