@@ -290,8 +290,9 @@ export function DashboardOverview() {
           )}
 
           {myBatches.data?.items.map((b) => (
-            <div
+            <Link
               key={b.id}
+              href={`/my-batches/${b.slug}`}
               className="group overflow-hidden rounded-2xl border border-border/60 bg-background/60 transition-all hover:-translate-y-0.5 hover:shadow-soft"
             >
               <div className="relative h-28 overflow-hidden bg-gradient-brand">
@@ -313,7 +314,7 @@ export function DashboardOverview() {
                   </p>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </Card>
