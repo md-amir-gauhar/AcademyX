@@ -2,6 +2,7 @@
 node_modules
 .pnp
 .pnp.js
+.pnpm-store
 
 # testing
 coverage
@@ -33,3 +34,8 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# legacy lockfiles (bun is the source of truth)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

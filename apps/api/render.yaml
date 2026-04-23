@@ -1,0 +1,24 @@
+services:
+  # Backend API Service
+  - type: web
+    name: queztlearn-api
+    runtime: docker
+    region: oregon # Change to your preferred region
+    plan: free # Change to paid plan for production
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set this in Render Dashboard
+      - key: RESEND_API_KEY
+        sync: false # Set this in Render Dashboard
+      - key: EMAIL_FROM
+        sync: false # Set this in Render Dashboard
+      - key: FRONTEND_URL
+        sync: false # Set this in Render Dashboard (e.g., https://your-frontend.com)
+      - key: JWT_SECRET
+        sync: false # Set this in Render Dashboard (use a strong random string)
+    healthCheckPath: /health-check

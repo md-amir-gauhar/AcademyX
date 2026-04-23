@@ -1,0 +1,1 @@
+ALTER TABLE "user_test_series_enrollment" RENAME TO "user_test_series_mapping";

@@ -1,0 +1,37 @@
+services:
+  # Backend API Service (Node.js Runtime - Alternative to Docker)
+  - type: web
+    name: queztlearn-api
+    runtime: node
+    region: oregon # Change to your preferred region
+    plan: free # Change to paid plan for production
+    branch: main
+    # Install ALL dependencies (including devDependencies for build)
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false # Set this in Render Dashboard
+      - key: RESEND_API_KEY
+        sync: false # Set this in Render Dashboard
+      - key: EMAIL_FROM
+        sync: false # Set this in Render Dashboard
+      - key: FRONTEND_URL
+        sync: false # Set this in Render Dashboard (e.g., https://your-frontend.com)
+      - key: JWT_SECRET
+        sync: false # Set this in Render Dashboard (use a strong random string)
+    healthCheckPath: /health-check
+
+# NOTE: This version uses Node.js runtime instead of Docker
+# Pros: 
+#   - Faster cold starts
+#   - Simpler setup
+# Cons:
+#   - Includes devDependencies in deployment
+#   - Larger deployment size
+#
+# If you prefer Docker (recommended), use the main render.yaml with runtime: docker
