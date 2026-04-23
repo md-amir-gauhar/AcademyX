@@ -19,9 +19,7 @@ import { useAuthStore } from "@/store/authStore";
 import { uploadAvatar } from "@/services/uploadService";
 import { initials } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Gender } from "@/types/auth";
-
-const GENDERS: Array<Gender> = ["Male", "Female", "Other", "Prefer not to say"];
+import { GENDERS, type Gender } from "@academyx/shared";
 
 const schema = z.object({
   username: z.string().min(2, "At least 2 characters").max(40, "Too long"),

@@ -1,5 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import {
+  formatNumber as sharedFormatNumber,
+  initials as sharedInitials,
+} from "@academyx/shared";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,9 +17,7 @@ export function formatINR(value: number) {
   }).format(value);
 }
 
-export function formatNumber(value: number) {
-  return new Intl.NumberFormat("en-IN").format(value);
-}
+export const formatNumber = sharedFormatNumber;
 
 export function formatDuration(seconds: number) {
   if (!seconds || seconds < 0) return "0m";
@@ -40,14 +42,7 @@ export function formatRelative(iso: string | Date | null | undefined) {
 }
 
 export function initials(name?: string | null) {
-  if (!name) return "U";
-  return name
-    .split(" ")
-    .map((s) => s[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  return sharedInitials(name, 2, "U");
 }
 
 export function safeJsonParse<T>(input: string | null, fallback: T): T {

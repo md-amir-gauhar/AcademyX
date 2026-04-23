@@ -11,6 +11,7 @@
       "name": "@academyx/api",
       "version": "1.0.0",
       "dependencies": {
+        "@academyx/shared": "workspace:*",
         "@aws-sdk/client-s3": "^3.917.0",
         "@aws-sdk/s3-request-presigner": "^3.917.0",
         "bcrypt": "^6.0.0",
@@ -54,6 +55,7 @@
       "name": "@academyx/web",
       "version": "0.1.0",
       "dependencies": {
+        "@academyx/shared": "workspace:*",
         "@hookform/resolvers": "^3.10.0",
         "@radix-ui/react-accordion": "^1.2.2",
         "@radix-ui/react-avatar": "^1.1.2",
@@ -100,12 +102,21 @@
         "typescript": "^5.7.2",
       },
     },
+    "packages/shared": {
+      "name": "@academyx/shared",
+      "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "^5.7.2",
+      },
+    },
   },
   "overrides": {
     "@types/express-serve-static-core": "5.0.7",
   },
   "packages": {
     "@academyx/api": ["@academyx/api@workspace:apps/api"],
+
+    "@academyx/shared": ["@academyx/shared@workspace:packages/shared"],
 
     "@academyx/web": ["@academyx/web@workspace:apps/web"],
 

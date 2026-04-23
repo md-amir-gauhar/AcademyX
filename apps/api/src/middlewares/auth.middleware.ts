@@ -5,6 +5,7 @@ import { user } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { ApiError } from "../common/response";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../common/constants";
+import type { UserRole } from "@academyx/shared";
 
 const JWT_SECRET = process.env.JWT_SECRET || "queztlearn_secret";
 
@@ -15,7 +16,7 @@ declare global {
       user?: {
         id: string;
         email: string | null;
-        role: "ADMIN" | "TEACHER" | "GUEST" | "STUDENT";
+        role: UserRole;
         organizationId: string;
       };
     }
@@ -89,7 +90,7 @@ export const authenticate = async (
     req.user = {
       id: userData.id,
       email: userData.email,
-      role: userData.role as "ADMIN" | "TEACHER" | "GUEST" | "STUDENT",
+      role: userData.role as UserRole,
       organizationId: userData.organizationId,
     };
 
@@ -102,9 +103,7 @@ export const authenticate = async (
 /**
  * Middleware to check if user has required role
  */
-export const authorize = (
-  ...allowedRoles: ("ADMIN" | "TEACHER" | "GUEST" | "STUDENT")[]
-) => {
+export const authorize = (...allowedRoles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
@@ -202,7 +201,7 @@ export const optionalAuth = async (
           req.user = {
             id: userData.id,
             email: userData.email,
-            role: userData.role as "ADMIN" | "TEACHER" | "GUEST" | "STUDENT",
+            role: userData.role as UserRole,
             organizationId: userData.organizationId,
           };
         }

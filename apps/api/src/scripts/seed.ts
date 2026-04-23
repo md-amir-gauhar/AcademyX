@@ -1,6 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import { eq, and } from "drizzle-orm";
+import type { ClassLevel, Exam } from "@academyx/shared";
 import { db } from "../db";
 import {
   organization,
@@ -212,8 +213,8 @@ type BatchSeed = {
   slug: string;
   name: string;
   description: string;
-  class: "11" | "12" | "12+" | "Grad";
-  exam: "JEE" | "NEET" | "UPSC" | "BANK" | "SSC" | "GATE" | "CAT" | "NDA" | "CLAT" | "OTHER";
+  class: ClassLevel;
+  exam: Exam;
   imageUrl?: string;
   startDate: Date;
   endDate: Date;
@@ -404,7 +405,7 @@ type TestSeriesSeed = {
   slug: string;
   title: string;
   description: string;
-  exam: "JEE" | "NEET" | "UPSC" | "BANK" | "SSC" | "GATE" | "CAT" | "NDA" | "CLAT" | "OTHER";
+  exam: Exam;
   imageUrl?: string;
   totalPrice: number;
   discountPercentage: number;

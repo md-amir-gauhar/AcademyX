@@ -1,6 +1,6 @@
-export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
+import type { UserRole, Gender } from "@academyx/shared";
 
-export type Gender = "Male" | "Female" | "Other" | "Prefer not to say";
+export type { UserRole, Gender };
 
 export interface AuthUser {
   id: string;

@@ -6,6 +6,7 @@ const API_HOST = new URL(
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@academyx/shared"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: API_HOST },
