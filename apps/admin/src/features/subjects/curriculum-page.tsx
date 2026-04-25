@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api/client";
+import { apiGet, apiGetRaw, apiPost, apiDelete } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -25,80 +25,134 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   BookOpen,
   Plus,
-  Pencil,
   Trash2,
   ChevronRight,
-  ArrowLeft,
   FileText,
   Video,
+  FolderOpen,
+  Layers,
+  Hash,
 } from "lucide-react";
 import type { Batch, Subject, Chapter, Topic, Content } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
 
-type View =
-  | { level: "batches" }
-  | { level: "subjects"; batchId: string; batchName: string }
-  | { level: "chapters"; subjectId: string; subjectName: string; batchId: string }
-  | { level: "topics"; chapterId: string; chapterName: string; subjectId: string }
-  | { level: "contents"; topicId: string; topicName: string; chapterId: string };
+interface Crumb {
+  label: string;
+  level: string;
+}
+
+interface CurriculumState {
+  level: "batches" | "subjects" | "chapters" | "topics" | "contents";
+  batchId?: string;
+  batchName?: string;
+  subjectId?: string;
+  subjectName?: string;
+  chapterId?: string;
+  chapterName?: string;
+  topicId?: string;
+  topicName?: string;
+}
+
+function normalizeArray<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object") {
+    if ("data" in data && Array.isArray((data as Record<string, unknown>).data))
+      return (data as Record<string, unknown>).data as T[];
+    if (
+      "batches" in data &&
+      Array.isArray((data as Record<string, unknown>).batches)
+    )
+      return (data as Record<string, unknown>).batches as T[];
+  }
+  return [];
+}
 
 export function CurriculumPage() {
   const queryClient = useQueryClient();
-  const [view, setView] = useState<View>({ level: "batches" });
+  const [state, setState] = useState<CurriculumState>({ level: "batches" });
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
     type: string;
   } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const batchesQuery = useQuery({
-    queryKey: ["batches-all"],
+    queryKey: ["curriculum-batches"],
     queryFn: () =>
-      apiGet<Batch[]>(endpoints.batches.list, {
+      apiGetRaw<unknown>(endpoints.batches.list, {
         params: { page: 1, limit: 100 },
       }),
-    enabled: view.level === "batches",
+    enabled: state.level === "batches",
   });
 
   const subjectsQuery = useQuery({
-    queryKey: ["subjects", view.level === "subjects" ? view.batchId : ""],
-    queryFn: () =>
-      view.level === "subjects"
-        ? apiGet<Subject[]>(endpoints.subjects.byBatch(view.batchId))
-        : Promise.resolve([]),
-    enabled: view.level === "subjects",
+    queryKey: ["subjects", state.batchId],
+    queryFn: () => apiGet<Subject[]>(endpoints.subjects.byBatch(state.batchId!)),
+    enabled: state.level === "subjects" && !!state.batchId,
   });
 
   const chaptersQuery = useQuery({
-    queryKey: ["chapters", view.level === "chapters" ? view.subjectId : ""],
+    queryKey: ["chapters", state.subjectId],
     queryFn: () =>
-      view.level === "chapters"
-        ? apiGet<Chapter[]>(endpoints.chapters.bySubject(view.subjectId))
-        : Promise.resolve([]),
-    enabled: view.level === "chapters",
+      apiGet<Chapter[]>(endpoints.chapters.bySubject(state.subjectId!)),
+    enabled: state.level === "chapters" && !!state.subjectId,
   });
 
   const topicsQuery = useQuery({
-    queryKey: ["topics", view.level === "topics" ? view.chapterId : ""],
-    queryFn: () =>
-      view.level === "topics"
-        ? apiGet<Topic[]>(endpoints.topics.byChapter(view.chapterId))
-        : Promise.resolve([]),
-    enabled: view.level === "topics",
+    queryKey: ["topics", state.chapterId],
+    queryFn: () => apiGet<Topic[]>(endpoints.topics.byChapter(state.chapterId!)),
+    enabled: state.level === "topics" && !!state.chapterId,
   });
 
   const contentsQuery = useQuery({
-    queryKey: ["contents", view.level === "contents" ? view.topicId : ""],
-    queryFn: () =>
-      view.level === "contents"
-        ? apiGet<Content[]>(endpoints.contents.byTopic(view.topicId))
-        : Promise.resolve([]),
-    enabled: view.level === "contents",
+    queryKey: ["contents", state.topicId],
+    queryFn: () => apiGet<Content[]>(endpoints.contents.byTopic(state.topicId!)),
+    enabled: state.level === "contents" && !!state.topicId,
   });
+
+  const crumbs: Crumb[] = [{ label: "All Batches", level: "batches" }];
+  if (state.batchName)
+    crumbs.push({ label: state.batchName, level: "subjects" });
+  if (state.subjectName)
+    crumbs.push({ label: state.subjectName, level: "chapters" });
+  if (state.chapterName)
+    crumbs.push({ label: state.chapterName, level: "topics" });
+  if (state.topicName)
+    crumbs.push({ label: state.topicName, level: "contents" });
+
+  const navigateToCrumb = (level: string) => {
+    if (level === "batches") setState({ level: "batches" });
+    else if (level === "subjects")
+      setState({
+        level: "subjects",
+        batchId: state.batchId,
+        batchName: state.batchName,
+      });
+    else if (level === "chapters")
+      setState({
+        level: "chapters",
+        batchId: state.batchId,
+        batchName: state.batchName,
+        subjectId: state.subjectId,
+        subjectName: state.subjectName,
+      });
+    else if (level === "topics")
+      setState({
+        level: "topics",
+        batchId: state.batchId,
+        batchName: state.batchName,
+        subjectId: state.subjectId,
+        subjectName: state.subjectName,
+        chapterId: state.chapterId,
+        chapterName: state.chapterName,
+      });
+  };
 
   const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -108,19 +162,19 @@ export function CurriculumPage() {
     let endpoint = "";
     let body: Record<string, unknown> = {};
 
-    if (view.level === "subjects") {
+    if (state.level === "subjects") {
       endpoint = endpoints.subjects.create;
-      body = { name, batchId: view.batchId };
-    } else if (view.level === "chapters") {
+      body = { name, batchId: state.batchId };
+    } else if (state.level === "chapters") {
       endpoint = endpoints.chapters.create;
-      body = { name, subjectId: view.subjectId, lectureCount: 0 };
-    } else if (view.level === "topics") {
+      body = { name, subjectId: state.subjectId, lectureCount: 0 };
+    } else if (state.level === "topics") {
       endpoint = endpoints.topics.create;
-      body = { name, chapterId: view.chapterId };
-    } else if (view.level === "contents") {
+      body = { name, chapterId: state.chapterId };
+    } else if (state.level === "contents") {
       endpoint = endpoints.contents.create;
       body = {
-        topicId: view.topicId,
+        topicId: state.topicId,
         type: fd.get("type") || "Lecture",
         title: name,
         videoUrl: fd.get("videoUrl") || undefined,
@@ -146,19 +200,20 @@ export function CurriculumPage() {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
+    setDeleting(true);
     let endpoint = "";
-    if (view.level === "subjects")
+    if (state.level === "subjects")
       endpoint = endpoints.subjects.delete(deleteTarget.id);
-    else if (view.level === "chapters")
+    else if (state.level === "chapters")
       endpoint = endpoints.chapters.delete(deleteTarget.id);
-    else if (view.level === "topics")
+    else if (state.level === "topics")
       endpoint = endpoints.topics.delete(deleteTarget.id);
-    else if (view.level === "contents")
+    else if (state.level === "contents")
       endpoint = endpoints.contents.delete(deleteTarget.id);
 
     apiDelete(endpoint)
       .then(() => {
-        toast.success("Deleted successfully");
+        toast.success("Deleted");
         queryClient.invalidateQueries();
         setDeleteTarget(null);
       })
@@ -166,188 +221,265 @@ export function CurriculumPage() {
         toast.error(
           err instanceof ApiRequestError ? err.message : "Deletion failed",
         ),
-      );
+      )
+      .finally(() => setDeleting(false));
   };
 
-  const goBack = () => {
-    if (view.level === "subjects") setView({ level: "batches" });
-    else if (view.level === "chapters")
-      setView({
-        level: "subjects",
-        batchId: view.batchId,
-        batchName: "",
-      });
-    else if (view.level === "topics")
-      setView({
-        level: "chapters",
-        subjectId: view.subjectId,
-        subjectName: "",
-        batchId: "",
-      });
-    else if (view.level === "contents")
-      setView({
-        level: "topics",
-        chapterId: view.chapterId,
-        chapterName: "",
-        subjectId: "",
-      });
-  };
+  const levelLabel =
+    state.level === "subjects"
+      ? "Subject"
+      : state.level === "chapters"
+        ? "Chapter"
+        : state.level === "topics"
+          ? "Topic"
+          : "Content";
 
-  const breadcrumb =
-    view.level === "batches"
-      ? "Select a batch"
-      : view.level === "subjects"
-        ? `Subjects in ${view.batchName || "batch"}`
-        : view.level === "chapters"
-          ? `Chapters in ${view.subjectName || "subject"}`
-          : view.level === "topics"
-            ? `Topics in ${view.chapterName || "chapter"}`
-            : `Content in ${view.topicName || "topic"}`;
+  const batches = normalizeArray<Batch>(batchesQuery.data);
+  const subjects = normalizeArray<Subject>(subjectsQuery.data);
+  const chapters = normalizeArray<Chapter>(chaptersQuery.data);
+  const topics = normalizeArray<Topic>(topicsQuery.data);
+  const contents = normalizeArray<Content>(contentsQuery.data);
+
+  const isLoading =
+    (state.level === "batches" && batchesQuery.isLoading) ||
+    (state.level === "subjects" && subjectsQuery.isLoading) ||
+    (state.level === "chapters" && chaptersQuery.isLoading) ||
+    (state.level === "topics" && topicsQuery.isLoading) ||
+    (state.level === "contents" && contentsQuery.isLoading);
 
   return (
     <div className="animate-fade-in">
       <PageHeader
         title="Curriculum"
-        description={breadcrumb}
+        description="Manage your course content hierarchy"
         action={
-          <div className="flex items-center gap-2">
-            {view.level !== "batches" && (
-              <Button variant="outline" size="sm" onClick={goBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-            )}
-            {view.level !== "batches" && (
-              <Button size="sm" onClick={() => setFormOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add{" "}
-                {view.level === "subjects"
-                  ? "Subject"
-                  : view.level === "chapters"
-                    ? "Chapter"
-                    : view.level === "topics"
-                      ? "Topic"
-                      : "Content"}
-              </Button>
-            )}
-          </div>
+          state.level !== "batches" ? (
+            <Button size="sm" onClick={() => setFormOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add {levelLabel}
+            </Button>
+          ) : undefined
         }
       />
 
-      {view.level === "batches" && (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(batchesQuery.data) ? batchesQuery.data : []).map(
-            (batch) => (
-              <Card
-                key={batch.id}
-                className="cursor-pointer transition-colors hover:border-primary/50"
-                onClick={() =>
-                  setView({
-                    level: "subjects",
-                    batchId: batch.id,
-                    batchName: batch.name,
-                  })
-                }
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm">{batch.name}</CardTitle>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{batch.exam}</Badge>
-                    <Badge variant="outline">Class {batch.class}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ),
-          )}
-          {batchesQuery.isLoading && (
-            <>{[...Array(3)].map((_, i) => <Card key={i} className="h-24" />)}</>
-          )}
+      {crumbs.length > 1 && (
+        <nav className="mb-5 flex items-center gap-1 text-sm">
+          {crumbs.map((crumb, i) => {
+            const isLast = i === crumbs.length - 1;
+            return (
+              <span key={crumb.level} className="flex items-center gap-1">
+                {i > 0 && (
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                )}
+                {isLast ? (
+                  <span className="font-medium text-foreground">
+                    {crumb.label}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => navigateToCrumb(crumb.level)}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {crumb.label}
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </nav>
+      )}
+
+      {isLoading && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-[58px] rounded-lg" />
+          ))}
         </div>
       )}
 
-      {view.level === "subjects" && (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(subjectsQuery.data) ? subjectsQuery.data : []).map(
-            (subject) => (
-              <Card
-                key={subject.id}
-                className="group cursor-pointer transition-colors hover:border-primary/50"
-                onClick={() =>
-                  setView({
-                    level: "chapters",
-                    subjectId: subject.id,
-                    subjectName: subject.name,
-                    batchId: view.batchId,
-                  })
-                }
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm">{subject.name}</CardTitle>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget({
-                          id: subject.id,
-                          name: subject.name,
-                          type: "subject",
-                        });
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      {/* ── BATCHES ── large cards with description + badges */}
+      {!isLoading && state.level === "batches" && (
+        <>
+          {batches.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No batches found"
+              description="Create batches first from the Batches page"
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {batches.map((batch) => (
+                <div
+                  key={batch.id}
+                  className="group cursor-pointer overflow-hidden rounded-xl border border-border/60 bg-card transition-all hover:border-primary/50 hover:shadow-md"
+                  onClick={() =>
+                    setState({
+                      level: "subjects",
+                      batchId: batch.id,
+                      batchName: batch.name,
+                    })
+                  }
+                >
+                  <div className="h-1.5 bg-gradient-to-r from-primary/80 to-primary/30" />
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-semibold">
+                          {batch.name}
+                        </h3>
+                        {batch.description && (
+                          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                            {batch.description.replace(/<[^>]*>/g, "")}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge variant="secondary">{batch.exam}</Badge>
+                      <Badge variant="outline">Class {batch.class}</Badge>
+                      <span className="ml-auto text-[11px] text-muted-foreground">
+                        {batch.language || "English"}
+                      </span>
+                    </div>
                   </div>
-                </CardHeader>
-              </Card>
-            ),
-          )}
-          {(subjectsQuery.data as Subject[] | undefined)?.length === 0 && (
-            <div className="col-span-full">
-              <EmptyState
-                icon={BookOpen}
-                title="No subjects"
-                description="Add subjects to this batch"
-              />
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {view.level === "chapters" && (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(chaptersQuery.data) ? chaptersQuery.data : []).map(
-            (chapter) => (
-              <Card
-                key={chapter.id}
-                className="group cursor-pointer transition-colors hover:border-primary/50"
-                onClick={() =>
-                  setView({
-                    level: "topics",
-                    chapterId: chapter.id,
-                    chapterName: chapter.name,
-                    subjectId: view.subjectId,
-                  })
-                }
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div>
-                    <CardTitle className="text-sm">{chapter.name}</CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {chapter.lectureCount} lectures
+      {/* ── SUBJECTS ── colored left-border cards */}
+      {!isLoading && state.level === "subjects" && (
+        <>
+          {subjects.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No subjects"
+              description={`Add subjects to ${state.batchName}`}
+              action={
+                <Button size="sm" onClick={() => setFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Subject
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {subjects.map((subject, i) => {
+                const colors = [
+                  "border-l-emerald-500",
+                  "border-l-sky-500",
+                  "border-l-amber-500",
+                  "border-l-rose-500",
+                  "border-l-violet-500",
+                  "border-l-teal-500",
+                ];
+                const bgColors = [
+                  "bg-emerald-500/10 text-emerald-500",
+                  "bg-sky-500/10 text-sky-500",
+                  "bg-amber-500/10 text-amber-500",
+                  "bg-rose-500/10 text-rose-500",
+                  "bg-violet-500/10 text-violet-500",
+                  "bg-teal-500/10 text-teal-500",
+                ];
+                const color = colors[i % colors.length];
+                const bgColor = bgColors[i % bgColors.length];
+
+                return (
+                  <div
+                    key={subject.id}
+                    className={`group flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 border-l-[3px] ${color} bg-card p-4 transition-all hover:shadow-sm`}
+                    onClick={() =>
+                      setState({
+                        ...state,
+                        level: "chapters",
+                        subjectId: subject.id,
+                        subjectName: subject.name,
+                      })
+                    }
+                  >
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${bgColor}`}
+                    >
+                      <FolderOpen className="h-[18px] w-[18px]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{subject.name}</p>
+                      <p className="text-[11px] text-muted-foreground">Subject</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTarget({
+                            id: subject.id,
+                            name: subject.name,
+                            type: "subject",
+                          });
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── CHAPTERS ── numbered list-style cards */}
+      {!isLoading && state.level === "chapters" && (
+        <>
+          {chapters.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No chapters"
+              description={`Add chapters to ${state.subjectName}`}
+              action={
+                <Button size="sm" onClick={() => setFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Chapter
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-2">
+              {chapters.map((chapter, i) => (
+                <div
+                  key={chapter.id}
+                  className="group flex cursor-pointer items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 transition-all hover:border-sky-500/30 hover:shadow-sm"
+                  onClick={() =>
+                    setState({
+                      ...state,
+                      level: "topics",
+                      chapterId: chapter.id,
+                      chapterName: chapter.name,
+                    })
+                  }
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sm font-bold text-sky-500">
+                    {i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{chapter.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {chapter.lectureCount} lecture{chapter.lectureCount !== 1 ? "s" : ""}
+                      {chapter.lectureDuration ? ` · ${chapter.lectureDuration}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                      className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget({
@@ -359,47 +491,56 @@ export function CurriculumPage() {
                     >
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                   </div>
-                </CardHeader>
-              </Card>
-            ),
-          )}
-          {(chaptersQuery.data as Chapter[] | undefined)?.length === 0 && (
-            <div className="col-span-full">
-              <EmptyState
-                icon={BookOpen}
-                title="No chapters"
-                description="Add chapters to this subject"
-              />
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {view.level === "topics" && (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(topicsQuery.data) ? topicsQuery.data : []).map(
-            (topic) => (
-              <Card
-                key={topic.id}
-                className="group cursor-pointer transition-colors hover:border-primary/50"
-                onClick={() =>
-                  setView({
-                    level: "contents",
-                    topicId: topic.id,
-                    topicName: topic.name,
-                    chapterId: view.chapterId,
-                  })
-                }
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm">{topic.name}</CardTitle>
+      {/* ── TOPICS ── compact pill-style items in a grid */}
+      {!isLoading && state.level === "topics" && (
+        <>
+          {topics.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No topics"
+              description={`Add topics to ${state.chapterName}`}
+              action={
+                <Button size="sm" onClick={() => setFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Topic
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {topics.map((topic) => (
+                <div
+                  key={topic.id}
+                  className="group flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-card px-4 py-3 transition-all hover:border-amber-500/30 hover:shadow-sm"
+                  onClick={() =>
+                    setState({
+                      ...state,
+                      level: "contents",
+                      topicId: topic.id,
+                      topicName: topic.name,
+                    })
+                  }
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-amber-500/10">
+                    <BookOpen className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {topic.name}
+                  </p>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                      className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget({
@@ -411,50 +552,75 @@ export function CurriculumPage() {
                     >
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                   </div>
-                </CardHeader>
-              </Card>
-            ),
-          )}
-          {(topicsQuery.data as Topic[] | undefined)?.length === 0 && (
-            <div className="col-span-full">
-              <EmptyState
-                icon={BookOpen}
-                title="No topics"
-                description="Add topics to this chapter"
-              />
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {view.level === "contents" && (
-        <div className="space-y-3">
-          {(Array.isArray(contentsQuery.data) ? contentsQuery.data : []).map(
-            (content) => (
-              <Card key={content.id} className="group">
-                <CardHeader className="flex flex-row items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
+      {/* ── CONTENTS ── flat list with type-specific styling */}
+      {!isLoading && state.level === "contents" && (
+        <>
+          {contents.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No content"
+              description={`Add content to ${state.topicName}`}
+              action={
+                <Button size="sm" onClick={() => setFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Content
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-2">
+              {contents.map((content, i) => (
+                <div
+                  key={content.id}
+                  className="group flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 transition-all hover:shadow-sm"
+                >
+                  <span className="w-5 text-center text-xs text-muted-foreground">
+                    {i + 1}
+                  </span>
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                      content.type === "Lecture"
+                        ? "bg-primary/10"
+                        : "bg-orange-500/10"
+                    }`}
+                  >
                     {content.type === "Lecture" ? (
                       <Video className="h-4 w-4 text-primary" />
                     ) : (
                       <FileText className="h-4 w-4 text-orange-500" />
                     )}
-                    <div>
-                      <CardTitle className="text-sm">
-                        {content.title || content.type}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        {content.type}
-                        {content.videoType ? ` (${content.videoType})` : ""}
-                      </p>
-                    </div>
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {content.title || content.type}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {content.type}
+                      {content.videoType ? ` · ${content.videoType}` : ""}
+                      {content.videoDuration
+                        ? ` · ${content.videoDuration} min`
+                        : ""}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={content.type === "Lecture" ? "secondary" : "outline"}
+                    className="shrink-0 text-[10px]"
+                  >
+                    {content.type}
+                  </Badge>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                    className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
                       setDeleteTarget({
                         id: content.id,
@@ -465,42 +631,26 @@ export function CurriculumPage() {
                   >
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
-                </CardHeader>
-              </Card>
-            ),
+                </div>
+              ))}
+            </div>
           )}
-          {(contentsQuery.data as Content[] | undefined)?.length === 0 && (
-            <EmptyState
-              icon={BookOpen}
-              title="No content"
-              description="Add content to this topic"
-            />
-          )}
-        </div>
+        </>
       )}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              Add{" "}
-              {view.level === "subjects"
-                ? "Subject"
-                : view.level === "chapters"
-                  ? "Chapter"
-                  : view.level === "topics"
-                    ? "Topic"
-                    : "Content"}
-            </DialogTitle>
+            <DialogTitle>Add {levelLabel}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                {view.level === "contents" ? "Title" : "Name"}
+                {state.level === "contents" ? "Title" : "Name"}
               </Label>
               <Input id="name" name="name" required />
             </div>
-            {view.level === "contents" && (
+            {state.level === "contents" && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
@@ -558,9 +708,10 @@ export function CurriculumPage() {
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete ${deleteTarget?.type}`}
-        description={`Are you sure you want to delete "${deleteTarget?.name}"?`}
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This cannot be undone.`}
         confirmLabel="Delete"
         onConfirm={handleDelete}
+        loading={deleting}
       />
     </div>
   );
