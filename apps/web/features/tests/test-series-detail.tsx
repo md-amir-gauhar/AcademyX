@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
   Clock,
   FileText,
+  Loader2,
   PlayCircle,
   ShieldCheck,
   Sparkles,
@@ -22,17 +24,33 @@ import { GradientOrb } from "@/components/brand/gradient-orb";
 import { EnrollButton } from "@/features/discover/enroll-button";
 import { HtmlContent } from "@/components/shared/html-content";
 import { useTestSeries, useTestsInSeries } from "@/hooks/useTestSeries";
+import { useStartAttempt } from "@/hooks/useTestAttempt";
 
 interface TestSeriesDetailProps {
   slug: string;
 }
 
 export function TestSeriesDetail({ slug }: TestSeriesDetailProps) {
+  const router = useRouter();
   const seriesQuery = useTestSeries(slug);
   const series = seriesQuery.data;
   const testsQuery = useTestsInSeries(
     series?.isEnrolled || series?.isPurchased ? series?.id : undefined
   );
+  const startAttemptMut = useStartAttempt();
+  const [startingTestId, setStartingTestId] = React.useState<string | null>(null);
+
+  function handleStartTest(testId: string) {
+    setStartingTestId(testId);
+    startAttemptMut.mutate(testId, {
+      onSuccess: (attempt) => {
+        router.push(`/tests/attempt/${attempt.id}`);
+      },
+      onError: () => {
+        setStartingTestId(null);
+      },
+    });
+  }
 
   if (seriesQuery.isLoading) return <DetailSkeleton />;
   if (seriesQuery.isError || !series) {
@@ -216,9 +234,14 @@ export function TestSeriesDetail({ slug }: TestSeriesDetailProps) {
                   <Button
                     variant="gradient"
                     size="sm"
-                    disabled={!t.isPublished}
+                    disabled={!t.isPublished || startingTestId === t.id}
+                    onClick={() => handleStartTest(t.id)}
                   >
-                    <PlayCircle className="h-4 w-4" />
+                    {startingTestId === t.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <PlayCircle className="h-4 w-4" />
+                    )}
                     {t.hasAttempted ? "Attempt again" : "Start"}
                   </Button>
                 </div>

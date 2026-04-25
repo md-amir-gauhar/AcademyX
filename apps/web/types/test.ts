@@ -36,6 +36,8 @@ export interface TestOption {
   isCorrect?: boolean;
 }
 
+export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
 export interface TestQuestion {
   id: string;
   type: QuestionType;
@@ -43,10 +45,12 @@ export interface TestQuestion {
   imageUrl?: string | null;
   marks: number;
   negativeMarks: number;
+  difficulty?: Difficulty;
   displayOrder: number;
   options: TestOption[];
   explanation?: string | null;
   explanationImageUrl?: string | null;
+  sectionId?: string;
 }
 
 export interface TestSection {
@@ -61,6 +65,7 @@ export interface TestSummary {
   title: string;
   slug: string;
   duration: number;
+  durationMinutes?: number;
   totalMarks: number;
   passingMarks: number;
   isPublished: boolean;
