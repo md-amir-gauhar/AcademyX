@@ -47,45 +47,48 @@ export function TestReport({ attemptId }: TestReportProps) {
   const [showSolutions, setShowSolutions] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("overview");
 
-  if (resultsQuery.isLoading) return <ReportLoader />;
-  if (!resultsQuery.data) {
-    return (
-      <div className="mx-auto max-w-4xl py-12 text-center">
-        <p className="text-muted-foreground">Could not load results.</p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>
-          Go back
-        </Button>
-      </div>
-    );
-  }
-
   const result = resultsQuery.data;
-  const {
-    totalScore,
-    percentage,
-    correctCount,
-    wrongCount,
-    skippedCount,
-    timeSpentSeconds,
-    isPassed,
-    rank,
-    percentile,
-    test,
-    answers,
-  } = result;
+  const test = result?.test;
+  const answers = result?.answers ?? [];
 
-  const totalQuestions = (correctCount ?? 0) + (wrongCount ?? 0) + (skippedCount ?? 0);
-  const attemptedCount = (correctCount ?? 0) + (wrongCount ?? 0);
-  const accuracy = attemptedCount > 0 ? ((correctCount ?? 0) / attemptedCount) * 100 : 0;
+  // Build sections with questions from the answers data since the API
+  // returns sections flat (without nested questions) in the results endpoint.
+  const sections = React.useMemo(() => {
+    if (!test) return [];
+    const rawSections = test.sections ?? [];
+    const hasQuestions = rawSections.length > 0 && rawSections[0]?.questions?.length > 0;
+    if (hasQuestions) return rawSections;
 
-  const questionToSection = new Map<string, string>();
-  for (const section of test.sections) {
-    for (const q of section.questions) {
-      questionToSection.set(q.id, section.id);
+    const sectionMap = new Map<string, { id: string; name: string; displayOrder: number; questions: TestQuestion[] }>();
+    for (const s of rawSections) {
+      sectionMap.set(s.id, { ...s, questions: [] });
     }
-  }
+    for (const ans of answers) {
+      if (!ans.question) continue;
+      const sId = ans.question.sectionId;
+      if (sId && sectionMap.has(sId)) {
+        const existing = sectionMap.get(sId)!;
+        if (!existing.questions.some((q) => q.id === ans.question.id)) {
+          existing.questions.push(ans.question);
+        }
+      } else if (sId) {
+        sectionMap.set(sId, {
+          id: sId,
+          name: "Section",
+          displayOrder: sectionMap.size,
+          questions: [ans.question],
+        });
+      }
+    }
+    if ([...sectionMap.values()].every((s) => s.questions.length === 0)) {
+      const allQs = answers.filter((a) => a.question).map((a) => a.question);
+      if (allQs.length === 0) return [];
+      return [{ id: "all", name: "All Questions", displayOrder: 0, questions: allQs }];
+    }
+    return [...sectionMap.values()].sort((a, b) => a.displayOrder - b.displayOrder);
+  }, [test, answers]);
 
-  const sectionStats = test.sections.map((section) => {
+  const sectionStats = React.useMemo(() => sections.map((section) => {
     const sectionQuestionIds = new Set(section.questions.map((q) => q.id));
     const sectionAnswers = answers.filter(
       (a) => sectionQuestionIds.has(a.questionId)
@@ -96,7 +99,38 @@ export function TestReport({ attemptId }: TestReportProps) {
     const maxMarks = section.questions.reduce((sum, q) => sum + q.marks, 0);
     const scored = sectionAnswers.reduce((sum, a) => sum + (a.marksAwarded ?? 0), 0);
     return { ...section, correct, wrong, skipped, maxMarks, scored, total: section.questions.length };
-  });
+  }), [sections, answers]);
+
+  if (resultsQuery.isLoading) return <ReportLoader />;
+  if (!result) {
+    return (
+      <div className="mx-auto max-w-4xl py-12 text-center">
+        <p className="text-muted-foreground">Could not load results.</p>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>
+          Go back
+        </Button>
+      </div>
+    );
+  }
+
+  const {
+    totalScore,
+    percentage,
+    correctCount,
+    wrongCount,
+    skippedCount,
+    timeSpentSeconds,
+    isPassed,
+    rank,
+    percentile,
+  } = result;
+
+  // Safe to assert — we returned early above if result is null
+  const testData = test!;
+
+  const totalQuestions = (correctCount ?? 0) + (wrongCount ?? 0) + (skippedCount ?? 0);
+  const attemptedCount = (correctCount ?? 0) + (wrongCount ?? 0);
+  const accuracy = attemptedCount > 0 ? ((correctCount ?? 0) / attemptedCount) * 100 : 0;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -118,7 +152,7 @@ export function TestReport({ attemptId }: TestReportProps) {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {test.title}
+                {testData.title}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={isPassed ? "success" : "outline"} className="text-xs">
@@ -147,7 +181,7 @@ export function TestReport({ attemptId }: TestReportProps) {
                 <p className="text-3xl font-bold tabular-nums">
                   {totalScore ?? 0}
                   <span className="text-base font-normal text-muted-foreground">
-                    /{test.totalMarks}
+                    /{testData.totalMarks}
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">Total Score</p>
@@ -300,7 +334,7 @@ export function TestReport({ attemptId }: TestReportProps) {
                     : "N/A"
                 } />
                 <MetricRow label="Pass Status" value={isPassed ? "Passed" : "Not Passed"} />
-                <MetricRow label="Passing Marks" value={`${test.passingMarks ?? 0}/${test.totalMarks}`} />
+                <MetricRow label="Passing Marks" value={`${testData.passingMarks ?? 0}/${testData.totalMarks}`} />
                 <MetricRow label="Your Percentage" value={`${(percentage ?? 0).toFixed(1)}%`} />
                 <MetricRow label="Time Taken" value={formatDuration(timeSpentSeconds ?? 0)} />
               </CardContent>
@@ -315,7 +349,7 @@ export function TestReport({ attemptId }: TestReportProps) {
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-3">
                 {(["EASY", "MEDIUM", "HARD"] as const).map((diff) => {
-                  const allQs = test.sections.flatMap((s) => s.questions);
+                  const allQs = sections.flatMap((s) => s.questions);
                   const diffQs = allQs.filter((q) => q.difficulty === diff);
                   const diffAnswers = answers.filter((a) =>
                     diffQs.some((q) => q.id === a.questionId)
@@ -350,7 +384,7 @@ export function TestReport({ attemptId }: TestReportProps) {
 
         {/* Solutions tab */}
         <TabsContent value="solutions" className="space-y-4 mt-6">
-          {test.sections.map((section) => (
+          {sections.map((section) => (
             <Card key={section.id}>
               <CardHeader>
                 <CardTitle className="text-lg">{section.name}</CardTitle>
