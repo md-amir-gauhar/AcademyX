@@ -147,7 +147,7 @@ export function BatchLearningView({ slug }: BatchLearningViewProps) {
         </TabsList>
 
         <TabsContent value="curriculum">
-          <CurriculumTree batchId={batch.id} />
+          <CurriculumTree batchId={batch.id} batchSlug={batch.slug} />
         </TabsContent>
 
         <TabsContent value="live">
@@ -174,7 +174,7 @@ export function BatchLearningView({ slug }: BatchLearningViewProps) {
 
 /* -------------------------- Curriculum -------------------------- */
 
-function CurriculumTree({ batchId }: { batchId: string }) {
+function CurriculumTree({ batchId, batchSlug }: { batchId: string; batchSlug: string }) {
   const subjects = useSubjects(batchId);
   const [selectedSubject, setSelectedSubject] = React.useState<string | null>(
     null
@@ -229,13 +229,13 @@ function CurriculumTree({ batchId }: { batchId: string }) {
       </Card>
 
       {selectedSubject ? (
-        <SubjectChapters subjectId={selectedSubject} />
+        <SubjectChapters subjectId={selectedSubject} batchSlug={batchSlug} />
       ) : null}
     </div>
   );
 }
 
-function SubjectChapters({ subjectId }: { subjectId: string }) {
+function SubjectChapters({ subjectId, batchSlug }: { subjectId: string; batchSlug: string }) {
   const chapters = useChapters(subjectId);
   if (chapters.isLoading) {
     return (
@@ -261,7 +261,7 @@ function SubjectChapters({ subjectId }: { subjectId: string }) {
   return (
     <div className="space-y-3">
       {chapters.data.map((c) => (
-        <ChapterRow key={c.id} chapterId={c.id} name={c.name} description={c.description} />
+        <ChapterRow key={c.id} chapterId={c.id} name={c.name} description={c.description} batchSlug={batchSlug} />
       ))}
     </div>
   );
@@ -271,10 +271,12 @@ function ChapterRow({
   chapterId,
   name,
   description,
+  batchSlug,
 }: {
   chapterId: string;
   name: string;
   description?: string | null;
+  batchSlug: string;
 }) {
   const [open, setOpen] = React.useState(false);
   return (
@@ -300,14 +302,14 @@ function ChapterRow({
       </button>
       {open && (
         <div className="border-t border-border/60 bg-muted/20 p-4">
-          <ChapterTopics chapterId={chapterId} />
+          <ChapterTopics chapterId={chapterId} batchSlug={batchSlug} />
         </div>
       )}
     </Card>
   );
 }
 
-function ChapterTopics({ chapterId }: { chapterId: string }) {
+function ChapterTopics({ chapterId, batchSlug }: { chapterId: string; batchSlug: string }) {
   const topics = useTopics(chapterId);
   if (topics.isLoading) {
     return (
@@ -328,13 +330,13 @@ function ChapterTopics({ chapterId }: { chapterId: string }) {
   return (
     <ol className="space-y-3">
       {topics.data.map((t) => (
-        <TopicBlock key={t.id} topicId={t.id} name={t.name} />
+        <TopicBlock key={t.id} topicId={t.id} name={t.name} batchSlug={batchSlug} />
       ))}
     </ol>
   );
 }
 
-function TopicBlock({ topicId, name }: { topicId: string; name: string }) {
+function TopicBlock({ topicId, name, batchSlug }: { topicId: string; name: string; batchSlug: string }) {
   const [open, setOpen] = React.useState(false);
   const contents = useContents(open ? topicId : undefined);
   return (
@@ -360,15 +362,17 @@ function TopicBlock({ topicId, name }: { topicId: string; name: string }) {
           ) : contents.data?.length ? (
             <ul className="space-y-1.5">
               {contents.data.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60"
-                >
-                  {contentIcon(c.type)}
-                  <span className="flex-1 line-clamp-1">{c.title}</span>
-                  <Badge variant="outline" className="text-[10px]">
-                    {c.type}
-                  </Badge>
+                <li key={c.id}>
+                  <Link
+                    href={`/my-batches/${batchSlug}/watch/${c.id}`}
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60 transition-colors"
+                  >
+                    {contentIcon(c.type)}
+                    <span className="flex-1 line-clamp-1">{c.title || c.name}</span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {c.type}
+                    </Badge>
+                  </Link>
                 </li>
               ))}
             </ul>

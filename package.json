@@ -5,6 +5,7 @@
   "scripts": {
     "dev:web": "bun --cwd apps/web dev",
     "dev:api": "bun --cwd apps/api dev",
+    "dev:admin": "bun --cwd apps/admin dev",
     "build": "bunx bun-workspaces run build --dep-order",
     "lint": "bunx bun-workspaces run lint",
     "test": "bunx bun-workspaces run test",

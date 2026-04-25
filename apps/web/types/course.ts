@@ -30,17 +30,20 @@ export type ContentType = "Lecture" | "PDF" | "Quiz" | "Note" | "Resource";
 export interface Content {
   id: string;
   topicId: string;
-  organizationId: string;
+  organizationId?: string;
   title: string;
+  name?: string;
   description?: string | null;
-  displayOrder: number;
+  displayOrder?: number;
   type: ContentType;
   videoUrl?: string | null;
+  videoType?: "HLS" | "YOUTUBE" | null;
   videoDuration?: number | null;
   thumbnailUrl?: string | null;
+  videoThumbnail?: string | null;
   pdfUrl?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ContentProgress {
