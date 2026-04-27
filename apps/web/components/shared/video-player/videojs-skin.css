@@ -154,3 +154,60 @@
   height: 3rem;
   margin: -1.5rem 0 0 -1.5rem;
 }
+
+/* ─── Quality menu button ─────────────────────────────────────── */
+.video-js.vjs-academyx .vjs-academyx-quality-button {
+  position: relative;
+  font-size: 0.75rem;
+  padding: 0 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.video-js.vjs-academyx
+  .vjs-academyx-quality-button
+  > .vjs-icon-placeholder::before {
+  content: "HD";
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.7rem;
+  line-height: 3.5rem;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+  display: inline-block;
+  transform: translateY(-2px);
+}
+
+.video-js.vjs-academyx
+  .vjs-academyx-quality-button:hover
+  > .vjs-icon-placeholder::before {
+  border-color: #a855f7;
+  color: #c084fc;
+}
+
+.video-js.vjs-academyx
+  .vjs-academyx-quality-button
+  .vjs-menu
+  .vjs-menu-content {
+  min-width: 8.5rem;
+}
+
+.video-js.vjs-academyx
+  .vjs-academyx-quality-button
+  .vjs-menu
+  .vjs-menu-item {
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+/* The "Auto" item gets a subtle accent so it reads as the default. */
+.video-js.vjs-academyx
+  .vjs-academyx-quality-button
+  .vjs-menu
+  .vjs-menu-item:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.45rem;
+}
