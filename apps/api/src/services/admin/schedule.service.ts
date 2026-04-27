@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { schedules, topics, batches, contents } from "../../db/schema";
+import { schedules, topics, batches, contents, mediaJobs } from "../../db/schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { ApiError } from "../../common/response";
 import { HTTP_STATUS } from "../../common/constants";
@@ -13,7 +13,9 @@ interface CreateScheduleInput {
   title: string;
   description?: string;
   subjectName: string;
-  youtubeLink: string;
+  /** Provide exactly one of youtubeLink / mediaJobId. */
+  youtubeLink?: string;
+  mediaJobId?: string;
   scheduledAt: Date | string;
   duration: number;
   teacherId?: string;
@@ -27,12 +29,33 @@ interface UpdateScheduleInput {
   description?: string;
   subjectName?: string;
   youtubeLink?: string;
+  mediaJobId?: string;
   scheduledAt?: Date | string;
   duration?: number;
   teacherId?: string | null;
   thumbnailUrl?: string;
   notifyBeforeMinutes?: number;
   tags?: string[];
+}
+
+/**
+ * Resolve the `hlsUrl` for a schedule from a linked media job. Returns null
+ * if the job is not yet ready, throws if it doesn't belong to this org.
+ */
+async function resolveHlsFromJob(
+  mediaJobId: string,
+  organizationId: string,
+): Promise<string | null> {
+  const job = await db.query.mediaJobs.findFirst({
+    where: and(
+      eq(mediaJobs.id, mediaJobId),
+      eq(mediaJobs.organizationId, organizationId),
+    ),
+  });
+  if (!job) {
+    throw new ApiError("Media job not found", HTTP_STATUS.NOT_FOUND);
+  }
+  return job.hlsUrl ?? null;
 }
 
 /**
@@ -65,6 +88,21 @@ export const createSchedule = async (input: CreateScheduleInput) => {
     throw new ApiError("Topic not found", HTTP_STATUS.NOT_FOUND);
   }
 
+  if (!input.youtubeLink && !input.mediaJobId) {
+    throw new ApiError(
+      "Provide either a YouTube link or a media job for the schedule",
+      HTTP_STATUS.BAD_REQUEST,
+    );
+  }
+
+  // If a media job is provided, snapshot its current hlsUrl. The job may
+  // still be PROCESSING — that's fine, the cron / status update will copy
+  // the URL once it's ready.
+  let hlsUrl: string | null = null;
+  if (input.mediaJobId) {
+    hlsUrl = await resolveHlsFromJob(input.mediaJobId, input.organizationId);
+  }
+
   // Create schedule
   const [newSchedule] = await db
     .insert(schedules)
@@ -77,6 +115,8 @@ export const createSchedule = async (input: CreateScheduleInput) => {
       description: input.description,
       subjectName: input.subjectName,
       youtubeLink: input.youtubeLink,
+      mediaJobId: input.mediaJobId,
+      hlsUrl,
       scheduledAt: new Date(input.scheduledAt),
       duration: input.duration,
       teacherId: input.teacherId,
@@ -297,12 +337,19 @@ export const updateSchedule = async (
     );
   }
 
+  // If switching to / re-pointing at a media job, refresh the cached hlsUrl.
+  let hlsUrlPatch: string | null | undefined;
+  if (input.mediaJobId) {
+    hlsUrlPatch = await resolveHlsFromJob(input.mediaJobId, organizationId);
+  }
+
   // Update schedule
   const [updatedSchedule] = await db
     .update(schedules)
     .set({
       ...input,
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : undefined,
+      hlsUrl: hlsUrlPatch,
       updatedAt: new Date(),
     })
     .where(eq(schedules.id, scheduleId))
@@ -335,16 +382,34 @@ export const updateScheduleStatus = async (
     .where(eq(schedules.id, scheduleId))
     .returning();
 
-  // Auto-create content when status is COMPLETED
+  // Auto-create content when status is COMPLETED. Prefer the transcoded
+  // HLS URL when available (uploaded recordings); fall back to the original
+  // YouTube link for live broadcasts.
   if (status === "COMPLETED" && !schedule.contentId) {
+    // Refresh hlsUrl from the job in case it finished after schedule create.
+    let resolvedHlsUrl = schedule.hlsUrl ?? null;
+    if (!resolvedHlsUrl && schedule.mediaJobId) {
+      resolvedHlsUrl = await resolveHlsFromJob(
+        schedule.mediaJobId,
+        organizationId,
+      );
+      if (resolvedHlsUrl) {
+        await db
+          .update(schedules)
+          .set({ hlsUrl: resolvedHlsUrl, updatedAt: new Date() })
+          .where(eq(schedules.id, scheduleId));
+      }
+    }
+
+    const useHls = Boolean(resolvedHlsUrl);
     const [newContent] = await db
       .insert(contents)
       .values({
         name: schedule.title,
         topicId: schedule.topicId,
         type: "Lecture",
-        videoUrl: schedule.youtubeLink,
-        videoType: "YOUTUBE",
+        videoUrl: useHls ? resolvedHlsUrl! : schedule.youtubeLink ?? "",
+        videoType: useHls ? "HLS" : "YOUTUBE",
         videoThumbnail: schedule.thumbnailUrl,
         videoDuration: schedule.duration,
         isCompleted: false,

@@ -81,22 +81,29 @@ export function ScheduleCard({ schedule, className }: ScheduleCardProps) {
             {schedule.batch.name}
           </span>
         )}
-        {schedule.youtubeLink && !isCancelled ? (
-          <Button
-            asChild
-            variant={isLive ? "gradient" : "outline"}
-            size="sm"
-          >
-            <a
-              href={schedule.youtubeLink}
-              target="_blank"
-              rel="noreferrer"
+        {(() => {
+          if (isCancelled) return null;
+          // Prefer the transcoded HLS recording when present.
+          const watchHref = schedule.hlsUrl || schedule.youtubeLink;
+          if (!watchHref) return null;
+          const label = schedule.hlsUrl
+            ? "Watch recording"
+            : isLive
+              ? "Join live"
+              : "Open";
+          return (
+            <Button
+              asChild
+              variant={isLive && !schedule.hlsUrl ? "gradient" : "outline"}
+              size="sm"
             >
-              {isLive ? "Join live" : "Open"}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          </Button>
-        ) : null}
+              <a href={watchHref} target="_blank" rel="noreferrer">
+                {label}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+          );
+        })()}
       </div>
     </article>
   );

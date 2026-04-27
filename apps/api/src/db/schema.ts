@@ -54,6 +54,13 @@ export const scheduleStatusEnum = pgEnum("schedule_status", [
   "CANCELLED",
 ]);
 
+export const mediaJobStatusEnum = pgEnum("media_job_status", [
+  "PENDING",
+  "PROCESSING",
+  "READY",
+  "FAILED",
+]);
+
 export const organization = table("organization", {
   id: t.uuid().defaultRandom().primaryKey(),
   name: t.varchar({ length: 255 }).notNull().unique(),
@@ -489,8 +496,12 @@ export const schedules = table(
     description: t.text(),
     subjectName: t.varchar("subject_name", { length: 255 }).notNull(),
 
-    // Live class info
-    youtubeLink: t.varchar("youtube_link", { length: 500 }).notNull(),
+    // Live class info — exactly one of `youtubeLink` or `mediaJobId` is set.
+    // `youtubeLink` for live broadcasts; uploaded recordings transcode into
+    // an HLS ladder owned by the linked media job.
+    youtubeLink: t.varchar("youtube_link", { length: 500 }),
+    mediaJobId: t.uuid("media_job_id"),
+    hlsUrl: t.varchar("hls_url", { length: 500 }),
     scheduledAt: t.timestamp("scheduled_at").notNull(),
     duration: t.integer().notNull(), // in minutes
 
@@ -525,6 +536,54 @@ export const schedules = table(
     t.index("schedules_scheduled_at_idx").on(table.scheduledAt),
     t.index("schedules_status_idx").on(table.status),
     t.index("schedules_teacher_idx").on(table.teacherId),
+    t.index("schedules_media_job_idx").on(table.mediaJobId),
+  ]
+);
+
+// HLS transcode jobs — one row per uploaded source video. Status drives the
+// admin polling UI and gets joined back to schedules / contents once the
+// rendition ladder is published to S3.
+export const mediaJobs = table(
+  "media_jobs",
+  {
+    id: t.uuid().defaultRandom().primaryKey(),
+    organizationId: t
+      .uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: t
+      .uuid("user_id")
+      .references(() => user.id, { onDelete: "set null" }),
+
+    status: mediaJobStatusEnum().notNull().default("PENDING"),
+
+    // Source object on S3 (the original upload).
+    sourceKey: t.varchar("source_key", { length: 500 }).notNull(),
+    sourceContentType: t.varchar("source_content_type", { length: 100 }),
+
+    // Output prefix on S3 (master.m3u8 + per-rendition folders live under it).
+    outputPrefix: t.varchar("output_prefix", { length: 500 }),
+    hlsUrl: t.varchar("hls_url", { length: 500 }),
+
+    // Source probe results.
+    durationSeconds: t.real("duration_seconds"),
+    width: t.integer(),
+    height: t.integer(),
+    sizeBytes: t.bigint("size_bytes", { mode: "number" }),
+
+    // Transcoding state.
+    progress: t.integer().notNull().default(0), // 0-100
+    error: t.text(),
+
+    startedAt: t.timestamp("started_at"),
+    completedAt: t.timestamp("completed_at"),
+    createdAt: t.timestamp("created_at").defaultNow().notNull(),
+    updatedAt: t.timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    t.index("media_jobs_org_idx").on(table.organizationId),
+    t.index("media_jobs_status_idx").on(table.status),
+    t.index("media_jobs_user_idx").on(table.userId),
   ]
 );
 
@@ -769,6 +828,21 @@ export const schedulesRelations = relations(schedules, ({ one }) => ({
   content: one(contents, {
     fields: [schedules.contentId],
     references: [contents.id],
+  }),
+  mediaJob: one(mediaJobs, {
+    fields: [schedules.mediaJobId],
+    references: [mediaJobs.id],
+  }),
+}));
+
+export const mediaJobsRelations = relations(mediaJobs, ({ one }) => ({
+  organization: one(organization, {
+    fields: [mediaJobs.organizationId],
+    references: [organization.id],
+  }),
+  user: one(user, {
+    fields: [mediaJobs.userId],
+    references: [user.id],
   }),
 }));
 

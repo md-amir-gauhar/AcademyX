@@ -75,6 +75,7 @@ export function SchedulesPage() {
       scheduledAt: fd.get("scheduledAt"),
       duration: Number(fd.get("duration")),
       youtubeLink: fd.get("youtubeLink") || undefined,
+      mediaJobId: fd.get("mediaJobId") || undefined,
       description: fd.get("description") || undefined,
       topicId: fd.get("topicId") || undefined,
       batchId: fd.get("batchId") || undefined,

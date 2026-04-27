@@ -105,3 +105,16 @@ app
     console.error("Failed to start server:", err);
     process.exit(1);
   });
+
+// Background workers — started in-process by default. Set
+// `WORKER_ENABLED=false` on API-only nodes (when you split the worker into
+// its own container/service).
+if (process.env.WORKER_ENABLED !== "false") {
+  import("./workers/transcode.worker")
+    .then(({ startTranscodeWorker }) => {
+      startTranscodeWorker();
+    })
+    .catch((err) => {
+      console.error("Failed to start transcode worker:", err);
+    });
+}

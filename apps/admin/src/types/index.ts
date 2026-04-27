@@ -112,6 +112,10 @@ export interface Schedule {
   title: string;
   subjectName: string;
   youtubeLink?: string;
+  /** UUID of a `MediaJob` if the schedule has an uploaded recording. */
+  mediaJobId?: string;
+  /** master.m3u8 URL — copied from the linked media job once it's READY. */
+  hlsUrl?: string;
   scheduledAt: string;
   duration: number;
   description?: string;
@@ -121,6 +125,29 @@ export interface Schedule {
   tags?: string[];
   status: string;
   organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MediaJobStatus = "PENDING" | "PROCESSING" | "READY" | "FAILED";
+
+export interface MediaJob {
+  id: string;
+  organizationId: string;
+  userId?: string;
+  status: MediaJobStatus;
+  sourceKey: string;
+  sourceContentType?: string;
+  outputPrefix?: string;
+  hlsUrl?: string;
+  durationSeconds?: number;
+  width?: number;
+  height?: number;
+  sizeBytes?: number;
+  progress: number;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

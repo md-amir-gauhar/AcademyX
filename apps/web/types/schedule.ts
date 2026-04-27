@@ -13,6 +13,10 @@ export interface Schedule {
   status: ScheduleStatus;
   notifyBeforeMinutes?: number | null;
   youtubeLink?: string | null;
+  /** When set, this is the HLS master.m3u8 URL produced by transcoding an
+   * uploaded recording. Players should prefer it over `youtubeLink`. */
+  hlsUrl?: string | null;
+  mediaJobId?: string | null;
   thumbnailUrl?: string | null;
   tags?: string[] | null;
   batch?: { id: string; name: string } | null;

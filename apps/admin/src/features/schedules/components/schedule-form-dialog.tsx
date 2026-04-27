@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Schedule } from "@/types";
+import { VideoUploadField } from "./video-upload-field";
 
 interface ScheduleFormDialogProps {
   open: boolean;
@@ -19,6 +22,8 @@ interface ScheduleFormDialogProps {
   isPending: boolean;
 }
 
+type SourceTab = "youtube" | "upload";
+
 export function ScheduleFormDialog({
   open,
   onOpenChange,
@@ -26,9 +31,28 @@ export function ScheduleFormDialog({
   onSubmit,
   isPending,
 }: ScheduleFormDialogProps) {
+  const initialTab: SourceTab =
+    editing?.mediaJobId || editing?.hlsUrl ? "upload" : "youtube";
+  const [tab, setTab] = useState<SourceTab>(initialTab);
+  const [media, setMedia] = useState<{ mediaJobId?: string; hlsUrl?: string }>({
+    mediaJobId: editing?.mediaJobId,
+    hlsUrl: editing?.hlsUrl,
+  });
+
+  // When the dialog opens with a different `editing` record, snap state to it.
+  useEffect(() => {
+    if (open) {
+      setTab(editing?.mediaJobId || editing?.hlsUrl ? "upload" : "youtube");
+      setMedia({
+        mediaJobId: editing?.mediaJobId,
+        hlsUrl: editing?.hlsUrl,
+      });
+    }
+  }, [open, editing]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {editing ? "Edit Schedule" : "Create Schedule"}
@@ -79,15 +103,56 @@ export function ScheduleFormDialog({
               required
             />
           </div>
+
+          {/* Source: YouTube link OR uploaded video that auto-transcodes to HLS */}
           <div className="space-y-2">
-            <Label htmlFor="youtubeLink">YouTube Link</Label>
-            <Input
-              id="youtubeLink"
-              name="youtubeLink"
-              defaultValue={editing?.youtubeLink ?? ""}
-              placeholder="https://youtube.com/..."
-            />
+            <Label>Class video</Label>
+            <Tabs
+              value={tab}
+              onValueChange={(v) => setTab(v as SourceTab)}
+              className="w-full"
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="youtube" className="flex-1">
+                  YouTube link
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="flex-1">
+                  Upload (HLS)
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="youtube" className="space-y-1">
+                <Input
+                  id="youtubeLink"
+                  name={tab === "youtube" ? "youtubeLink" : undefined}
+                  defaultValue={editing?.youtubeLink ?? ""}
+                  placeholder="https://www.youtube.com/embed/VIDEO_ID"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use the embed URL — open the YouTube video → Share → Embed.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="upload">
+                <VideoUploadField
+                  initialMediaJobId={editing?.mediaJobId}
+                  initialHlsUrl={editing?.hlsUrl}
+                  onChange={setMedia}
+                />
+                {tab === "upload" && media.mediaJobId && (
+                  <input
+                    type="hidden"
+                    name="mediaJobId"
+                    value={media.mediaJobId}
+                  />
+                )}
+                {tab === "upload" && media.hlsUrl && (
+                  <input type="hidden" name="hlsUrl" value={media.hlsUrl} />
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
+
           {!editing && (
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">

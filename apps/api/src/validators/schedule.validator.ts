@@ -21,46 +21,53 @@ export const youtubeEmbedUrl = z
   );
 
 // Create Schedule Schema
-export const createScheduleSchema = z.object({
-  topicId: z.string().uuid("Invalid topic ID"),
-  batchId: z.string().uuid("Invalid batch ID"),
-  subjectId: z.string().uuid("Invalid subject ID"),
-  title: z
-    .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(255, "Title must not exceed 255 characters"),
-  description: z.string().optional(),
-  subjectName: z
-    .string()
-    .min(1, "Subject name is required")
-    .max(255, "Subject name must not exceed 255 characters"),
-  youtubeLink: youtubeEmbedUrl,
-  scheduledAt: z
-    .string()
-    .datetime("Invalid date format")
-    .or(z.date().transform((d) => d.toISOString()))
-    .refine((date) => {
-      const scheduledDate = new Date(date);
-      const now = new Date();
-      return scheduledDate > now;
-    }, "Scheduled time must be in the future"),
-  duration: z
-    .number()
-    .int("Duration must be an integer")
-    .positive("Duration must be a positive number"),
-  teacherId: z.string().uuid("Invalid teacher ID").optional(),
-  thumbnailUrl: z
-    .string()
-    .url("Invalid thumbnail URL")
-    .optional()
-    .or(z.literal("")),
-  notifyBeforeMinutes: z
-    .number()
-    .int("Notify before minutes must be an integer")
-    .min(0, "Cannot be negative")
-    .default(30),
-  tags: z.array(z.string()).optional(),
-});
+// A schedule must have either a YouTube link OR a media job (uploaded video).
+export const createScheduleSchema = z
+  .object({
+    topicId: z.string().uuid("Invalid topic ID"),
+    batchId: z.string().uuid("Invalid batch ID"),
+    subjectId: z.string().uuid("Invalid subject ID"),
+    title: z
+      .string()
+      .min(3, "Title must be at least 3 characters")
+      .max(255, "Title must not exceed 255 characters"),
+    description: z.string().optional(),
+    subjectName: z
+      .string()
+      .min(1, "Subject name is required")
+      .max(255, "Subject name must not exceed 255 characters"),
+    youtubeLink: youtubeEmbedUrl.optional(),
+    mediaJobId: z.string().uuid("Invalid media job ID").optional(),
+    scheduledAt: z
+      .string()
+      .datetime("Invalid date format")
+      .or(z.date().transform((d) => d.toISOString()))
+      .refine((date) => {
+        const scheduledDate = new Date(date);
+        const now = new Date();
+        return scheduledDate > now;
+      }, "Scheduled time must be in the future"),
+    duration: z
+      .number()
+      .int("Duration must be an integer")
+      .positive("Duration must be a positive number"),
+    teacherId: z.string().uuid("Invalid teacher ID").optional(),
+    thumbnailUrl: z
+      .string()
+      .url("Invalid thumbnail URL")
+      .optional()
+      .or(z.literal("")),
+    notifyBeforeMinutes: z
+      .number()
+      .int("Notify before minutes must be an integer")
+      .min(0, "Cannot be negative")
+      .default(30),
+    tags: z.array(z.string()).optional(),
+  })
+  .refine((d) => Boolean(d.youtubeLink) || Boolean(d.mediaJobId), {
+    message: "Provide either a YouTube link or an uploaded video",
+    path: ["youtubeLink"],
+  });
 
 // Update Schedule Schema
 export const updateScheduleSchema = z.object({
@@ -76,6 +83,7 @@ export const updateScheduleSchema = z.object({
     .max(255, "Subject name must not exceed 255 characters")
     .optional(),
   youtubeLink: youtubeEmbedUrl.optional(),
+  mediaJobId: z.string().uuid("Invalid media job ID").optional(),
   scheduledAt: z
     .string()
     .datetime("Invalid date format")

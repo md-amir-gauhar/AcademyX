@@ -16,6 +16,7 @@ import contentRoute from "./admin/content.route";
 import scheduleRoute from "./admin/schedule.route";
 import testSeriesRoute from "./admin/test-series.route";
 import testRoute from "./admin/test.route";
+import mediaRoute from "./admin/media.route";
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use("/contents", authenticatedRateLimiter, contentRoute);
 router.use("/schedules", authenticatedRateLimiter, scheduleRoute);
 router.use("/test-series", authenticatedRateLimiter, testSeriesRoute);
 router.use("/tests", authenticatedRateLimiter, testRoute);
+router.use("/media", authenticatedRateLimiter, mediaRoute);
 
 export default router;

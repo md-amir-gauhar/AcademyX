@@ -130,6 +130,11 @@ export const endpoints = {
     batchSignedUrls: "/upload/batch-signed-urls",
     direct: "/upload",
   },
+  media: {
+    transcode: "/media/transcode",
+    jobs: "/media/jobs",
+    job: (id: string) => `/media/jobs/${id}`,
+  },
   cache: {
     clear: "/cache/clear",
     stats: "/cache/stats",
