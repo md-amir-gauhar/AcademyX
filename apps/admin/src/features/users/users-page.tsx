@@ -7,29 +7,12 @@ import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, UserPlus, Trash2 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
-import type { User } from "@/types";
+import { Shield, UserPlus } from "lucide-react";
 import { ApiRequestError } from "@/lib/api/errors";
+import type { User } from "@/types";
+import { UsersTable } from "./components/users-table";
+import { InviteUserDialog } from "./components/invite-user-dialog";
 
 export function UsersPage() {
   const queryClient = useQueryClient();
@@ -94,101 +77,22 @@ export function UsersPage() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />
           ))}
         </div>
       ) : list.length === 0 ? (
         <EmptyState icon={Shield} title="No users found" />
       ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    {user.username}
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        user.role === "ADMIN"
-                          ? "default"
-                          : user.role === "TEACHER"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteTarget(user)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <UsersTable users={list} onDelete={setDeleteTarget} />
       )}
 
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invite Teacher</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleInvite} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="teacher@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                placeholder="teacher_name"
-                required
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setInviteOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={inviteMutation.isPending}>
-                {inviteMutation.isPending ? "Sending..." : "Send Invite"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <InviteUserDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        onSubmit={handleInvite}
+        isPending={inviteMutation.isPending}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

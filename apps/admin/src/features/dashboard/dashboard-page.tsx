@@ -2,47 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  GraduationCap,
-  Users,
-  BookOpen,
-  ClipboardList,
-  Calendar,
-  Database,
-} from "lucide-react";
+import { GraduationCap, Users, ClipboardList, Database } from "lucide-react";
 import type { Batch, Teacher, TestSeries, CacheStats } from "@/types";
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  loading,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  loading?: boolean;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-7 w-20" />
-        ) : (
-          <p className="text-2xl font-bold">{value}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+import { StatCard } from "./components/stat-card";
+import { QuickActions } from "./components/quick-actions";
+import { SystemStatus } from "./components/system-status";
 
 export function DashboardPage() {
   const batchesQuery = useQuery({
@@ -115,67 +79,11 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="h-4 w-4" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "New Batch", href: "/batches", icon: GraduationCap },
-                { label: "Add Teacher", href: "/teachers", icon: Users },
-                { label: "Schedule Class", href: "/schedules", icon: Calendar },
-                { label: "Create Test", href: "/test-series", icon: ClipboardList },
-              ].map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center gap-3 rounded-lg border border-border/50 p-3 text-sm transition-colors hover:bg-accent"
-                >
-                  <item.icon className="h-4 w-4 text-primary" />
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">System Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Cache Available
-              </span>
-              <span className="text-sm font-medium">
-                {cacheQuery.data &&
-                typeof cacheQuery.data === "object" &&
-                "isAvailable" in cacheQuery.data
-                  ? (cacheQuery.data as CacheStats).isAvailable
-                    ? "Online"
-                    : "Offline"
-                  : "Unknown"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Memory Used
-              </span>
-              <span className="text-sm font-medium">
-                {cacheQuery.data &&
-                typeof cacheQuery.data === "object" &&
-                "memoryUsed" in cacheQuery.data
-                  ? (cacheQuery.data as CacheStats).memoryUsed
-                  : "N/A"}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <QuickActions />
+        <SystemStatus
+          cacheData={cacheQuery.data}
+          isLoading={cacheQuery.isLoading}
+        />
       </div>
     </div>
   );

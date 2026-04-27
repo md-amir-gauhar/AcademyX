@@ -7,28 +7,12 @@ import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Plus, Pencil, Trash2 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { Users, Plus } from "lucide-react";
 import type { Teacher } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
+import { TeachersTable } from "./components/teachers-table";
+import { TeacherFormDialog } from "./components/teacher-form-dialog";
 
 export function TeachersPage() {
   const queryClient = useQueryClient();
@@ -110,7 +94,18 @@ export function TeachersPage() {
     }
   };
 
+  const openCreateForm = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+
+  const openEditForm = (teacher: Teacher) => {
+    setEditing(teacher);
+    setFormOpen(true);
+  };
+
   const list = Array.isArray(teachers) ? teachers : [];
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="animate-fade-in">
@@ -118,13 +113,7 @@ export function TeachersPage() {
         title="Teachers"
         description="Manage your teaching staff"
         action={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-            size="sm"
-          >
+          <Button onClick={openCreateForm} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             Add Teacher
           </Button>
@@ -133,7 +122,7 @@ export function TeachersPage() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />
           ))}
         </div>
@@ -143,122 +132,27 @@ export function TeachersPage() {
           title="No teachers yet"
           description="Add your first teacher"
           action={
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-              size="sm"
-            >
+            <Button onClick={openCreateForm} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Teacher
             </Button>
           }
         />
       ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((teacher) => (
-                <TableRow key={teacher.id}>
-                  <TableCell className="font-medium">{teacher.name}</TableCell>
-                  <TableCell>
-                    {teacher.subjects?.join(", ") || "—"}
-                  </TableCell>
-                  <TableCell>{formatDate(teacher.createdAt)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditing(teacher);
-                          setFormOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteTarget(teacher)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <TeachersTable
+          teachers={list}
+          onEdit={openEditForm}
+          onDelete={setDeleteTarget}
+        />
       )}
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit Teacher" : "Add Teacher"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                defaultValue={editing?.name}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">Image URL</Label>
-              <Input
-                id="imageUrl"
-                name="imageUrl"
-                defaultValue={editing?.imageUrl ?? ""}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subjects">Subjects (comma-separated)</Label>
-              <Input
-                id="subjects"
-                name="subjects"
-                defaultValue={editing?.subjects?.join(", ") ?? ""}
-                placeholder="Physics, Chemistry, Math"
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setFormOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : editing
-                    ? "Update"
-                    : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TeacherFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        onSubmit={handleSubmit}
+        isPending={isPending}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -7,36 +7,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FileText, Plus, Pencil, Trash2, Send } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import type { Test, TestSeries } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
+import { TestsTable } from "./components/tests-table";
+import { TestFormDialog } from "./components/test-form-dialog";
+import { SeriesSelector } from "./components/series-selector";
 
 export function TestsPage() {
   const queryClient = useQueryClient();
@@ -157,21 +134,11 @@ export function TestsPage() {
         }
       />
 
-      <div className="mb-6 max-w-sm space-y-2">
-        <Label>Select Test Series</Label>
-        <Select value={selectedSeriesId} onValueChange={setSelectedSeriesId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a test series..." />
-          </SelectTrigger>
-          <SelectContent>
-            {allSeries.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <SeriesSelector
+        allSeries={allSeries}
+        value={selectedSeriesId}
+        onChange={setSelectedSeriesId}
+      />
 
       {!selectedSeriesId ? (
         <EmptyState
@@ -192,160 +159,25 @@ export function TestsPage() {
           description="Create your first test in this series"
         />
       ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Total Marks</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[140px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((test) => (
-                <TableRow key={test.id}>
-                  <TableCell className="font-medium">{test.title}</TableCell>
-                  <TableCell>{test.duration} min</TableCell>
-                  <TableCell>{test.totalMarks}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={test.isPublished ? "success" : "secondary"}
-                    >
-                      {test.isPublished ? "Published" : "Draft"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {!test.isPublished && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => publishMutation.mutate(test.id)}
-                          title="Publish"
-                        >
-                          <Send className="h-4 w-4 text-primary" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditing(test);
-                          setFormOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteTarget(test)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <TestsTable
+          tests={list}
+          onPublish={(testId) => publishMutation.mutate(testId)}
+          onEdit={(test) => {
+            setEditing(test);
+            setFormOpen(true);
+          }}
+          onDelete={setDeleteTarget}
+        />
       )}
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit Test" : "Create Test"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={editing?.title}
-                required
-              />
-            </div>
-            {!editing && (
-              <div className="space-y-2">
-                <Label htmlFor="testSeriesId">Test Series</Label>
-                <Select
-                  name="testSeriesId"
-                  defaultValue={selectedSeriesId}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allSeries.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (min)</Label>
-                <Input
-                  id="duration"
-                  name="duration"
-                  type="number"
-                  defaultValue={editing?.duration ?? 60}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="totalMarks">Total Marks</Label>
-                <Input
-                  id="totalMarks"
-                  name="totalMarks"
-                  type="number"
-                  defaultValue={editing?.totalMarks ?? 100}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="passingMarks">Passing</Label>
-                <Input
-                  id="passingMarks"
-                  name="passingMarks"
-                  type="number"
-                  defaultValue={editing?.passingMarks ?? ""}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={editing?.description ?? ""}
-                rows={2}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setFormOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editing ? "Update" : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TestFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        allSeries={allSeries}
+        selectedSeriesId={selectedSeriesId}
+        onSubmit={handleSubmit}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

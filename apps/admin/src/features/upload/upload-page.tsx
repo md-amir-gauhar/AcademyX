@@ -4,23 +4,11 @@ import { toast } from "sonner";
 import { apiPost, adminClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Link, Copy, Check } from "lucide-react";
 import { ApiRequestError } from "@/lib/api/errors";
-
-interface UploadResult {
-  key: string;
-  location?: string;
-  cdnUrl?: string;
-  publicUrl?: string;
-  uploadUrl?: string;
-  originalName?: string;
-  size?: number;
-  mimeType?: string;
-}
+import type { UploadResult } from "./types";
+import { DirectUploadCard } from "./components/direct-upload-card";
+import { SignedUrlCard } from "./components/signed-url-card";
+import { UploadResults } from "./components/upload-results";
 
 export function UploadPage() {
   const [results, setResults] = useState<UploadResult[]>([]);
@@ -90,124 +78,21 @@ export function UploadPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Upload className="h-4 w-4" />
-              Direct Upload
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="file"
-                onChange={handleDirectUpload}
-                disabled={directUploadMutation.isPending}
-              />
-              {directUploadMutation.isPending && (
-                <p className="text-sm text-muted-foreground">Uploading...</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Link className="h-4 w-4" />
-              Signed URL
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignedUrl} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fileName">File Name</Label>
-                <Input
-                  id="fileName"
-                  name="fileName"
-                  placeholder="document.pdf"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="fileType">File Type</Label>
-                  <Input
-                    id="fileType"
-                    name="fileType"
-                    placeholder="application/pdf"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fileSize">File Size (bytes)</Label>
-                  <Input
-                    id="fileSize"
-                    name="fileSize"
-                    type="number"
-                    placeholder="1048576"
-                    required
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                disabled={signedUrlMutation.isPending}
-              >
-                Generate Signed URL
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <DirectUploadCard
+          onFileChange={handleDirectUpload}
+          isPending={directUploadMutation.isPending}
+        />
+        <SignedUrlCard
+          onSubmit={handleSignedUrl}
+          isPending={signedUrlMutation.isPending}
+        />
       </div>
 
-      {results.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-base">Recent Uploads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {results.map((result, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {result.originalName || result.key}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {result.cdnUrl || result.publicUrl || result.uploadUrl}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      copyToClipboard(
-                        result.cdnUrl ||
-                          result.publicUrl ||
-                          result.uploadUrl ||
-                          "",
-                      )
-                    }
-                  >
-                    {copied ===
-                    (result.cdnUrl ||
-                      result.publicUrl ||
-                      result.uploadUrl) ? (
-                      <Check className="h-4 w-4 text-success" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <UploadResults
+        results={results}
+        copied={copied}
+        onCopy={copyToClipboard}
+      />
     </div>
   );
 }

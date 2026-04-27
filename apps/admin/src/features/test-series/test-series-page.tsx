@@ -8,35 +8,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClipboardList, Plus, Pencil, Trash2 } from "lucide-react";
-const EXAMS = ["JEE","NEET","UPSC","BANK","SSC","GATE","CAT","NDA","CLAT","OTHER"] as const;
+import { ClipboardList, Plus } from "lucide-react";
+import { TestSeriesTable } from "./components/test-series-table";
+import { TestSeriesFormDialog } from "./components/test-series-form-dialog";
 import type { TestSeries } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
 
@@ -110,6 +85,11 @@ export function TestSeriesPage() {
     else createMutation.mutate(body);
   };
 
+  const handleEdit = (series: TestSeries) => {
+    setEditing(series);
+    setFormOpen(true);
+  };
+
   const items = data?.items ?? [];
 
   return (
@@ -145,66 +125,11 @@ export function TestSeriesPage() {
         />
       ) : (
         <>
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Exam</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((series) => (
-                  <TableRow key={series.id}>
-                    <TableCell className="font-medium">
-                      {series.title}
-                    </TableCell>
-                    <TableCell>{series.exam}</TableCell>
-                    <TableCell>
-                      {series.isFree
-                        ? "Free"
-                        : `₹${series.totalPrice}`}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          series.status === "PUBLISHED"
-                            ? "success"
-                            : "secondary"
-                        }
-                      >
-                        {series.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditing(series);
-                            setFormOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTarget(series)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <TestSeriesTable
+            items={items}
+            onEdit={handleEdit}
+            onDelete={setDeleteTarget}
+          />
           {data?.pagination && (
             <DataTablePagination
               pagination={data.pagination}
@@ -214,93 +139,13 @@ export function TestSeriesPage() {
         </>
       )}
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit Test Series" : "Create Test Series"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={editing?.title}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  name="slug"
-                  defaultValue={editing?.slug}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="exam">Exam</Label>
-                <Select name="exam" defaultValue={editing?.exam || "JEE"}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXAMS.map((e) => (
-                      <SelectItem key={e} value={e}>
-                        {e}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="totalPrice">Price (₹)</Label>
-                <Input
-                  id="totalPrice"
-                  name="totalPrice"
-                  type="number"
-                  defaultValue={editing?.totalPrice ?? 0}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="durationDays">Duration (days)</Label>
-                <Input
-                  id="durationDays"
-                  name="durationDays"
-                  type="number"
-                  defaultValue={editing?.durationDays ?? 30}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={editing?.description ?? ""}
-                rows={3}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setFormOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editing ? "Update" : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TestSeriesFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        onSubmit={handleSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

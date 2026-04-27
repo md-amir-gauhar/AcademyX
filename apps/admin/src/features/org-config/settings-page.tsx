@@ -1,19 +1,16 @@
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Shield, Mail, CreditCard } from "lucide-react";
 import type { OrganizationConfig } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
+import { GeneralSettingsForm } from "./components/general-settings-form";
+import { PaymentSettingsForm } from "./components/payment-settings-form";
+import { SmtpSettingsForm } from "./components/smtp-settings-form";
 
 export function SettingsPage() {
   const queryClient = useQueryClient();
@@ -85,13 +82,16 @@ export function SettingsPage() {
     });
   };
 
-  const orgConfig = config && typeof config === "object" ? (config as OrganizationConfig) : null;
+  const orgConfig =
+    config && typeof config === "object"
+      ? (config as OrganizationConfig)
+      : null;
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <PageHeader title="Settings" />
-        {[...Array(3)].map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-48 w-full" />
         ))}
       </div>
@@ -126,193 +126,21 @@ export function SettingsPage() {
       />
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Settings className="h-4 w-4" />
-              General
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleGeneralSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="logoUrl">Logo URL</Label>
-                  <Input
-                    id="logoUrl"
-                    name="logoUrl"
-                    defaultValue={orgConfig?.logoUrl ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="faviconUrl">Favicon URL</Label>
-                  <Input
-                    id="faviconUrl"
-                    name="faviconUrl"
-                    defaultValue={orgConfig?.faviconUrl ?? ""}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tagline">Tagline</Label>
-                  <Input
-                    id="tagline"
-                    name="tagline"
-                    defaultValue={orgConfig?.tagline ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="primaryColor">Primary Color</Label>
-                  <Input
-                    id="primaryColor"
-                    name="primaryColor"
-                    defaultValue={orgConfig?.primaryColor ?? ""}
-                    placeholder="#6366F1"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="supportEmail">Support Email</Label>
-                  <Input
-                    id="supportEmail"
-                    name="supportEmail"
-                    defaultValue={orgConfig?.supportEmail ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="supportPhone">Support Phone</Label>
-                  <Input
-                    id="supportPhone"
-                    name="supportPhone"
-                    defaultValue={orgConfig?.supportPhone ?? ""}
-                  />
-                </div>
-              </div>
-              <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="seoTitle">SEO Title</Label>
-                  <Input
-                    id="seoTitle"
-                    name="seoTitle"
-                    defaultValue={orgConfig?.seoTitle ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="seoDescription">SEO Description</Label>
-                  <Input
-                    id="seoDescription"
-                    name="seoDescription"
-                    defaultValue={orgConfig?.seoDescription ?? ""}
-                  />
-                </div>
-              </div>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                Save General Settings
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CreditCard className="h-4 w-4" />
-              Payment (Razorpay)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="razorpayKeyId">Key ID</Label>
-                  <Input
-                    id="razorpayKeyId"
-                    name="razorpayKeyId"
-                    defaultValue={orgConfig?.razorpayKeyId ?? ""}
-                    type="password"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="razorpayKeySecret">Key Secret</Label>
-                  <Input
-                    id="razorpayKeySecret"
-                    name="razorpayKeySecret"
-                    defaultValue={orgConfig?.razorpayKeySecret ?? ""}
-                    type="password"
-                  />
-                </div>
-              </div>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                Save Payment Settings
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="h-4 w-4" />
-              SMTP / Email
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSmtpSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="smtpHost">SMTP Host</Label>
-                  <Input
-                    id="smtpHost"
-                    name="smtpHost"
-                    defaultValue={orgConfig?.smtpHost ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="smtpPort">SMTP Port</Label>
-                  <Input
-                    id="smtpPort"
-                    name="smtpPort"
-                    type="number"
-                    defaultValue={orgConfig?.smtpPort ?? 587}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="smtpUser">SMTP User</Label>
-                  <Input
-                    id="smtpUser"
-                    name="smtpUser"
-                    defaultValue={orgConfig?.smtpUser ?? ""}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="smtpPassword">SMTP Password</Label>
-                  <Input
-                    id="smtpPassword"
-                    name="smtpPassword"
-                    type="password"
-                    defaultValue={orgConfig?.smtpPassword ?? ""}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="smtpFromEmail">From Email</Label>
-                <Input
-                  id="smtpFromEmail"
-                  name="smtpFromEmail"
-                  defaultValue={orgConfig?.smtpFromEmail ?? ""}
-                />
-              </div>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                Save SMTP Settings
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <GeneralSettingsForm
+          config={orgConfig}
+          onSubmit={handleGeneralSubmit}
+          isPending={updateMutation.isPending}
+        />
+        <PaymentSettingsForm
+          config={orgConfig}
+          onSubmit={handlePaymentSubmit}
+          isPending={updateMutation.isPending}
+        />
+        <SmtpSettingsForm
+          config={orgConfig}
+          onSubmit={handleSmtpSubmit}
+          isPending={updateMutation.isPending}
+        />
       </div>
     </div>
   );

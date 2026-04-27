@@ -4,11 +4,10 @@ import { toast } from "sonner";
 import { apiGet, apiGetRaw, apiPost, apiDelete } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Batch, Subject, Chapter, Topic, Content } from "@/types";
 import { ApiRequestError } from "@/lib/api/errors";
 
@@ -18,12 +17,14 @@ import {
   CurriculumBreadcrumbs,
   type Crumb,
 } from "./components/curriculum-breadcrumbs";
-import { BatchCard } from "./components/batch-card";
-import { SubjectCard } from "./components/subject-card";
-import { ChapterCard } from "./components/chapter-card";
-import { TopicCard } from "./components/topic-card";
-import { ContentCard } from "./components/content-card";
 import { CreateItemDialog } from "./components/create-item-dialog";
+import {
+  BatchList,
+  SubjectList,
+  ChapterList,
+  TopicList,
+  ContentList,
+} from "./components/curriculum-lists";
 
 function normalizeArray<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data;
@@ -355,197 +356,3 @@ export function CurriculumPage() {
   );
 }
 
-/* ─── List wrappers ─────────────────────────────────────────────── */
-
-function BatchList({
-  batches,
-  onSelect,
-}: {
-  batches: Batch[];
-  onSelect: (batch: Batch) => void;
-}) {
-  if (batches.length === 0) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No batches found"
-        description="Create batches first from the Batches page"
-      />
-    );
-  }
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {batches.map((batch) => (
-        <BatchCard key={batch.id} batch={batch} onClick={() => onSelect(batch)} />
-      ))}
-    </div>
-  );
-}
-
-function SubjectList({
-  subjects,
-  parentName,
-  onSelect,
-  onDelete,
-  onAdd,
-}: {
-  subjects: Subject[];
-  parentName?: string;
-  onSelect: (subject: Subject) => void;
-  onDelete: (subject: Subject) => void;
-  onAdd: () => void;
-}) {
-  if (subjects.length === 0) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No subjects"
-        description={`Add subjects to ${parentName}`}
-        action={
-          <Button size="sm" onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Subject
-          </Button>
-        }
-      />
-    );
-  }
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {subjects.map((subject, i) => (
-        <SubjectCard
-          key={subject.id}
-          subject={subject}
-          index={i}
-          onClick={() => onSelect(subject)}
-          onDelete={() => onDelete(subject)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ChapterList({
-  chapters,
-  parentName,
-  onSelect,
-  onDelete,
-  onAdd,
-}: {
-  chapters: Chapter[];
-  parentName?: string;
-  onSelect: (chapter: Chapter) => void;
-  onDelete: (chapter: Chapter) => void;
-  onAdd: () => void;
-}) {
-  if (chapters.length === 0) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No chapters"
-        description={`Add chapters to ${parentName}`}
-        action={
-          <Button size="sm" onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Chapter
-          </Button>
-        }
-      />
-    );
-  }
-  return (
-    <div className="space-y-2">
-      {chapters.map((chapter, i) => (
-        <ChapterCard
-          key={chapter.id}
-          chapter={chapter}
-          index={i}
-          onClick={() => onSelect(chapter)}
-          onDelete={() => onDelete(chapter)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function TopicList({
-  topics,
-  parentName,
-  onSelect,
-  onDelete,
-  onAdd,
-}: {
-  topics: Topic[];
-  parentName?: string;
-  onSelect: (topic: Topic) => void;
-  onDelete: (topic: Topic) => void;
-  onAdd: () => void;
-}) {
-  if (topics.length === 0) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No topics"
-        description={`Add topics to ${parentName}`}
-        action={
-          <Button size="sm" onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Topic
-          </Button>
-        }
-      />
-    );
-  }
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {topics.map((topic) => (
-        <TopicCard
-          key={topic.id}
-          topic={topic}
-          onClick={() => onSelect(topic)}
-          onDelete={() => onDelete(topic)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContentList({
-  contents,
-  parentName,
-  onDelete,
-  onAdd,
-}: {
-  contents: Content[];
-  parentName?: string;
-  onDelete: (content: Content) => void;
-  onAdd: () => void;
-}) {
-  if (contents.length === 0) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No content"
-        description={`Add content to ${parentName}`}
-        action={
-          <Button size="sm" onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Content
-          </Button>
-        }
-      />
-    );
-  }
-  return (
-    <div className="space-y-2">
-      {contents.map((content, i) => (
-        <ContentCard
-          key={content.id}
-          content={content}
-          index={i}
-          onDelete={() => onDelete(content)}
-        />
-      ))}
-    </div>
-  );
-}

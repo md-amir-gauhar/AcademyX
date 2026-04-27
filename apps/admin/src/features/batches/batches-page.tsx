@@ -8,39 +8,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, Plus, Pencil, Trash2 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
-const EXAMS = ["JEE","NEET","UPSC","BANK","SSC","GATE","CAT","NDA","CLAT","OTHER"] as const;
-const CLASS_LEVELS = ["11","12","12+","Grad"] as const;
-import type { Batch } from "@/types";
+import { GraduationCap, Plus } from "lucide-react";
 import { ApiRequestError } from "@/lib/api/errors";
+import { BatchesTable } from "./components/batches-table";
+import { BatchFormDialog } from "./components/batch-form-dialog";
+import type { Batch } from "@/types";
 
 export function BatchesPage() {
   const queryClient = useQueryClient();
@@ -131,6 +104,7 @@ export function BatchesPage() {
   };
 
   const batches = data?.items ?? [];
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="animate-fade-in">
@@ -147,7 +121,7 @@ export function BatchesPage() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />
           ))}
         </div>
@@ -165,65 +139,11 @@ export function BatchesPage() {
         />
       ) : (
         <>
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Exam</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {batches.map((batch) => (
-                  <TableRow key={batch.id}>
-                    <TableCell className="font-medium">{batch.name}</TableCell>
-                    <TableCell>{batch.class}</TableCell>
-                    <TableCell>{batch.exam}</TableCell>
-                    <TableCell>
-                      {batch.totalPrice > 0 ? `₹${batch.totalPrice}` : "Free"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          batch.status === "PUBLISHED"
-                            ? "success"
-                            : batch.status === "DRAFT"
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {batch.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(batch.startDate)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(batch)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTarget(batch)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <BatchesTable
+            batches={batches}
+            onEdit={openEdit}
+            onDelete={setDeleteTarget}
+          />
           {data?.pagination && (
             <DataTablePagination
               pagination={data.pagination}
@@ -233,136 +153,13 @@ export function BatchesPage() {
         </>
       )}
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit Batch" : "Create Batch"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                defaultValue={editing?.name}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="class">Class</Label>
-                <Select name="class" defaultValue={editing?.class || "12"}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CLASS_LEVELS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="exam">Exam</Label>
-                <Select name="exam" defaultValue={editing?.exam || "JEE"}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXAMS.map((e) => (
-                      <SelectItem key={e} value={e}>
-                        {e}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  defaultValue={
-                    editing?.startDate
-                      ? new Date(editing.startDate).toISOString().split("T")[0]
-                      : ""
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  defaultValue={
-                    editing?.endDate
-                      ? new Date(editing.endDate).toISOString().split("T")[0]
-                      : ""
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="totalPrice">Price (₹)</Label>
-                <Input
-                  id="totalPrice"
-                  name="totalPrice"
-                  type="number"
-                  defaultValue={editing?.totalPrice ?? 0}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Input
-                  id="language"
-                  name="language"
-                  defaultValue={editing?.language || "English"}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={editing?.description ?? ""}
-                rows={3}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setFormOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : editing
-                    ? "Update"
-                    : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <BatchFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editing={editing}
+        onSubmit={handleSubmit}
+        isPending={isPending}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}
