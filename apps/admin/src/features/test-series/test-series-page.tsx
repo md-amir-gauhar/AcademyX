@@ -71,14 +71,17 @@ export function TestSeriesPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const totalPrice = Number(fd.get("totalPrice"));
+    const discount = Number(fd.get("discountPercentage"));
     const body: Record<string, unknown> = {
       title: fd.get("title"),
       slug: fd.get("slug"),
       exam: fd.get("exam"),
-      totalPrice: Number(fd.get("totalPrice")),
+      totalPrice,
+      discountPercentage: Number.isFinite(discount) ? discount : undefined,
       description: fd.get("description") || undefined,
       durationDays: Number(fd.get("durationDays")) || undefined,
-      isFree: fd.get("totalPrice") === "0",
+      isFree: totalPrice === 0,
     };
 
     if (editing) updateMutation.mutate({ id: editing.id, body });

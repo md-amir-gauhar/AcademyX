@@ -114,15 +114,29 @@ export function BatchFormDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="totalPrice">Price (₹)</Label>
               <Input
                 id="totalPrice"
                 name="totalPrice"
                 type="number"
+                min={0}
                 defaultValue={editing?.totalPrice ?? 0}
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discountPercentage">Discount (%)</Label>
+              <Input
+                id="discountPercentage"
+                name="discountPercentage"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                defaultValue={editing?.discountPercentage ?? 0}
+                placeholder="0"
               />
             </div>
             <div className="space-y-2">

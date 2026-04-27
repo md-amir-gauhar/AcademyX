@@ -85,6 +85,7 @@ export function BatchesPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const discount = Number(fd.get("discountPercentage"));
     const body: Record<string, unknown> = {
       name: fd.get("name"),
       class: fd.get("class"),
@@ -93,6 +94,7 @@ export function BatchesPage() {
       startDate: fd.get("startDate"),
       endDate: fd.get("endDate"),
       totalPrice: Number(fd.get("totalPrice")),
+      discountPercentage: Number.isFinite(discount) ? discount : undefined,
       description: fd.get("description") || undefined,
     };
 

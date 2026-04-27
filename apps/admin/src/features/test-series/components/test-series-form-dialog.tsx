@@ -78,14 +78,28 @@ export function TestSeriesFormDialog({
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="totalPrice">Price (₹)</Label>
               <Input
                 id="totalPrice"
                 name="totalPrice"
                 type="number"
+                min={0}
                 defaultValue={editing?.totalPrice ?? 0}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discountPercentage">Discount (%)</Label>
+              <Input
+                id="discountPercentage"
+                name="discountPercentage"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                defaultValue={editing?.discountPercentage ?? 0}
+                placeholder="0"
               />
             </div>
             <div className="space-y-2">
@@ -94,6 +108,7 @@ export function TestSeriesFormDialog({
                 id="durationDays"
                 name="durationDays"
                 type="number"
+                min={0}
                 defaultValue={editing?.durationDays ?? 30}
               />
             </div>
