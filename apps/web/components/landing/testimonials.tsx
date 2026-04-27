@@ -6,37 +6,14 @@ import { SectionHeading } from "@/components/brand/section-heading";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initials } from "@/lib/utils";
 import { useOrgConfig } from "@/hooks/useOrgConfig";
-
-const FALLBACK = [
-  {
-    name: "Aditi Sharma",
-    role: "JEE Advanced aspirant",
-    quote:
-      "AcademyX feels like a calm, focused space. Live classes, doubts, streaks — I stopped juggling 5 apps and my rank jumped 2,000 places.",
-    avatarUrl: "https://i.pravatar.cc/120?img=47",
-  },
-  {
-    name: "Rahul Verma",
-    role: "NEET 2025",
-    quote:
-      "The AI assistant and adaptive tests are unreal. It knows exactly where I'm weak and quietly nudges me to practice the right thing.",
-    avatarUrl: "https://i.pravatar.cc/120?img=13",
-  },
-  {
-    name: "Meera Iyer",
-    role: "CBSE Class 12",
-    quote:
-      "Beautiful product. Feels premium. My teachers post live sessions and I can rewatch everything on my phone on the bus.",
-    avatarUrl: "https://i.pravatar.cc/120?img=5",
-  },
-];
+import { FALLBACK_TESTIMONIALS } from "@/components/landing/data";
 
 export function Testimonials() {
   const { config } = useOrgConfig();
   const items =
     config?.testimonials && config.testimonials.length > 0
       ? config.testimonials
-      : FALLBACK;
+      : FALLBACK_TESTIMONIALS;
 
   return (
     <section className="relative py-24">

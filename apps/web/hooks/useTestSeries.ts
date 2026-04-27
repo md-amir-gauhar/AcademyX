@@ -8,7 +8,7 @@ import {
   listTestsInSeries,
   type ListTestSeriesQuery,
 } from "@/services/testSeriesService";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 import type { ApiRequestError } from "@/lib/api/errors";
 
 export const testSeriesKeys = {
@@ -20,7 +20,7 @@ export const testSeriesKeys = {
 };
 
 export function useTestSeriesList(q: ListTestSeriesQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: testSeriesKeys.list(q),
     queryFn: () => listTestSeries(q),
@@ -29,7 +29,7 @@ export function useTestSeriesList(q: ListTestSeriesQuery = {}) {
 }
 
 export function useMyTestSeries(q: ListTestSeriesQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: testSeriesKeys.mine(q),
     queryFn: () => listMyTestSeries(q),
@@ -38,7 +38,7 @@ export function useMyTestSeries(q: ListTestSeriesQuery = {}) {
 }
 
 export function useTestSeries(idOrSlug: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: idOrSlug
       ? testSeriesKeys.detail(idOrSlug)
@@ -57,7 +57,7 @@ export function useTestSeries(idOrSlug: string | undefined) {
 }
 
 export function useTestsInSeries(seriesId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: seriesId
       ? testSeriesKeys.tests(seriesId)

@@ -14,7 +14,7 @@ import {
   getAttemptStats,
   type RecentCompletedQuery,
 } from "@/services/testAttemptService";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 import type { SubmitAnswerPayload } from "@/types/test";
 
 export const attemptKeys = {
@@ -40,7 +40,7 @@ export function useStartAttempt() {
 }
 
 export function useAttempt(attemptId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: attemptId ? attemptKeys.detail(attemptId) : ["attempts", "noop"],
     queryFn: () => {
@@ -70,7 +70,7 @@ export function useSubmitTest() {
 }
 
 export function useAttemptResults(attemptId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: attemptId
       ? attemptKeys.results(attemptId)
@@ -84,7 +84,7 @@ export function useAttemptResults(attemptId: string | undefined) {
 }
 
 export function useAttemptSolutions(attemptId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: attemptId
       ? attemptKeys.solutions(attemptId)
@@ -98,7 +98,7 @@ export function useAttemptSolutions(attemptId: string | undefined) {
 }
 
 export function useMyAttempts(testId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: testId
       ? attemptKeys.myAttempts(testId)
@@ -115,7 +115,7 @@ export function useLeaderboard(
   testId: string | undefined,
   q: { page?: number; limit?: number } = {}
 ) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: testId
       ? attemptKeys.leaderboard(testId, q)
@@ -129,7 +129,7 @@ export function useLeaderboard(
 }
 
 export function useRecentCompleted(q: RecentCompletedQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: attemptKeys.recentCompleted(q),
     queryFn: () => listRecentCompleted(q),
@@ -138,7 +138,7 @@ export function useRecentCompleted(q: RecentCompletedQuery = {}) {
 }
 
 export function useAttemptStats(testSeriesId?: string) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: attemptKeys.stats(testSeriesId),
     queryFn: () => getAttemptStats(testSeriesId),

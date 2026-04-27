@@ -4,10 +4,10 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { Loader2, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { detectVideoType, type VideoType } from "@/lib/video";
 
-const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
-
-export type VideoType = "YOUTUBE" | "HLS" | "MP4";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ReactPlayer = dynamic(() => import("react-player") as any, { ssr: false }) as any;
 
 interface VideoPlayerProps {
   url: string;
@@ -21,6 +21,8 @@ interface VideoPlayerProps {
   autoPlay?: boolean;
   className?: string;
 }
+
+export { type VideoType };
 
 export function VideoPlayer({
   url,
@@ -36,6 +38,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const [isReady, setIsReady] = React.useState(false);
   const [hasError, setHasError] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = React.useRef<any>(null);
 
   const resolvedType = videoType ?? detectVideoType(url);
@@ -71,8 +74,7 @@ export function VideoPlayer({
     onReady?.();
   }
 
-  function handleError(error: any) {
-    console.error("Video player error:", error);
+  function handleError() {
     setHasError(true);
   }
 
@@ -125,10 +127,4 @@ export function VideoPlayer({
       />
     </div>
   );
-}
-
-function detectVideoType(url: string): VideoType {
-  if (/youtube\.com|youtu\.be/i.test(url)) return "YOUTUBE";
-  if (/\.m3u8/i.test(url)) return "HLS";
-  return "MP4";
 }

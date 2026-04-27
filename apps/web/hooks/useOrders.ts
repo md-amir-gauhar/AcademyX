@@ -5,14 +5,14 @@ import {
   listOrders,
   type OrderHistoryQuery,
 } from "@/services/orderService";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 
 export const orderKeys = {
   list: (q: OrderHistoryQuery) => ["orders", "list", q] as const,
 };
 
 export function useOrders(q: OrderHistoryQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: orderKeys.list(q),
     queryFn: () => listOrders(q),

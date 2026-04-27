@@ -22,6 +22,7 @@ import { PriceBlock } from "@/components/shared/price-block";
 import { TeacherRow } from "@/components/shared/teacher-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GradientOrb } from "@/components/brand/gradient-orb";
+import { ProductHero } from "@/components/shared/product-hero";
 import { ScheduleCard } from "@/components/discover/schedule-card";
 import { useBatch } from "@/hooks/useBatches";
 import { useSubjects } from "@/hooks/useCourse";
@@ -70,97 +71,87 @@ export function BatchDetail({ slug }: BatchDetailProps) {
         <ArrowLeft className="h-4 w-4" /> Discover
       </Link>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-brand p-6 text-white shadow-glow sm:p-10">
-        <GradientOrb
-          color="violet"
-          size="xl"
-          className="-top-20 -right-20 opacity-60"
-        />
-        <GradientOrb
-          color="sky"
-          size="lg"
-          className="-bottom-20 -left-20 opacity-40"
-        />
-        <div className="relative grid gap-8 lg:grid-cols-[2fr_1fr] lg:items-center">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {batch.exam && (
-                <Badge className="border-transparent bg-white/20 text-white">
-                  {batch.exam}
-                </Badge>
-              )}
-              {batch.class && (
-                <Badge className="border-transparent bg-white/15 text-white">
-                  Class {batch.class}
-                </Badge>
-              )}
-              {batch.language && (
-                <Badge className="border-transparent bg-white/15 text-white">
-                  {batch.language}
-                </Badge>
-              )}
-              {isFree && <Badge variant="success">Free</Badge>}
-              {batch.isPurchased && <Badge variant="success">Enrolled</Badge>}
-            </div>
-            <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              {batch.name}
-            </h1>
-            {batch.description && (
-              <HtmlContent
-                html={batch.description}
-                variant="prose"
-                className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
-              />
+      <ProductHero
+        title={batch.name}
+        description={
+          batch.description ? (
+            <HtmlContent
+              html={batch.description}
+              variant="prose"
+              className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
+            />
+          ) : undefined
+        }
+        badges={
+          <>
+            {batch.exam && (
+              <Badge className="border-transparent bg-white/20 text-white">
+                {batch.exam}
+              </Badge>
             )}
-            {batch.teachers?.length > 0 && (
-              <TeacherRow teachers={batch.teachers} max={4} size="md" />
+            {batch.class && (
+              <Badge className="border-transparent bg-white/15 text-white">
+                Class {batch.class}
+              </Badge>
             )}
-          </div>
-
-          <Card className="bg-background/95 text-foreground shadow-soft backdrop-blur">
-            <div className="space-y-5 p-6">
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {isFree ? "Price" : "One-time payment"}
-                </p>
-                <PriceBlock
-                  total={batch.totalPrice}
-                  discounted={batch.discountedPrice}
-                  discountPercentage={batch.discountPercentage}
-                  size="lg"
-                  isFree={isFree}
-                />
-              </div>
-              <EnrollButton
-                kind="BATCH"
-                id={batch.id}
-                name={batch.name}
+            {batch.language && (
+              <Badge className="border-transparent bg-white/15 text-white">
+                {batch.language}
+              </Badge>
+            )}
+            {isFree && <Badge variant="success">Free</Badge>}
+            {batch.isPurchased && <Badge variant="success">Enrolled</Badge>}
+          </>
+        }
+        teacher={
+          batch.teachers?.length > 0 ? (
+            <TeacherRow teachers={batch.teachers} max={4} size="md" />
+          ) : undefined
+        }
+        priceBlock={
+          <>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {isFree ? "Price" : "One-time payment"}
+              </p>
+              <PriceBlock
+                total={batch.totalPrice}
+                discounted={batch.discountedPrice}
+                discountPercentage={batch.discountPercentage}
+                size="lg"
                 isFree={isFree}
-                isEnrolled={Boolean(batch.isPurchased)}
-                goToOnEnrolled={`/my-batches/${batch.slug}`}
-                className="w-full"
               />
-              <ul className="space-y-2 text-sm">
-                {batch.validity?.days && (
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4 text-success" />
-                    Access for {batch.validity.days} days
-                  </li>
-                )}
-                <li className="flex items-center gap-2 text-muted-foreground">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Live mentor classes + recordings
-                </li>
-                <li className="flex items-center gap-2 text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  Certificate on completion
-                </li>
-              </ul>
             </div>
-          </Card>
-        </div>
-      </section>
+            <EnrollButton
+              kind="BATCH"
+              id={batch.id}
+              name={batch.name}
+              isFree={isFree}
+              isEnrolled={Boolean(batch.isPurchased)}
+              goToOnEnrolled={`/my-batches/${batch.slug}`}
+              className="w-full"
+            />
+          </>
+        }
+        features={[
+          ...(batch.validity?.days
+            ? [
+                {
+                  icon: <ShieldCheck className="h-4 w-4 text-success" />,
+                  label: `Access for ${batch.validity.days} days`,
+                },
+              ]
+            : []),
+          {
+            icon: <Sparkles className="h-4 w-4 text-primary" />,
+            label: "Live mentor classes + recordings",
+          },
+          {
+            icon: <CheckCircle2 className="h-4 w-4 text-success" />,
+            label: "Certificate on completion",
+          },
+        ]}
+      />
 
       {/* Stats */}
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4">

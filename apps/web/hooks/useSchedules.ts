@@ -8,7 +8,7 @@ import {
   listSchedulesByTopic,
 } from "@/services/scheduleService";
 import type { ScheduleQuery } from "@/types/schedule";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 
 export const scheduleKeys = {
   feed: (q: ScheduleQuery) => ["schedules", "feed", q] as const,
@@ -20,7 +20,7 @@ export const scheduleKeys = {
 };
 
 export function useSchedules(q: ScheduleQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: scheduleKeys.feed(q),
     queryFn: () => listSchedules(q),
@@ -30,7 +30,7 @@ export function useSchedules(q: ScheduleQuery = {}) {
 }
 
 export function useSchedule(id: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: id ? scheduleKeys.detail(id) : ["schedules", "detail", "noop"],
     queryFn: () => {
@@ -42,7 +42,7 @@ export function useSchedule(id: string | undefined) {
 }
 
 export function useSchedulesByBatch(batchId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: batchId
       ? scheduleKeys.byBatch(batchId)
@@ -56,7 +56,7 @@ export function useSchedulesByBatch(batchId: string | undefined) {
 }
 
 export function useSchedulesByTopic(topicId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: topicId
       ? scheduleKeys.byTopic(topicId)

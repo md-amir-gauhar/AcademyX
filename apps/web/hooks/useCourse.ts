@@ -11,7 +11,7 @@ import {
   listSubjects,
   listTopics,
 } from "@/services/courseService";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 
 export const courseKeys = {
   subjects: (batchId: string) => ["course", "subjects", batchId] as const,
@@ -25,7 +25,7 @@ export const courseKeys = {
 };
 
 export function useSubjects(batchId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: batchId ? courseKeys.subjects(batchId) : ["course", "subjects", "noop"],
     queryFn: () => {
@@ -38,7 +38,7 @@ export function useSubjects(batchId: string | undefined) {
 }
 
 export function useSubject(id: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: id ? courseKeys.subject(id) : ["course", "subject", "noop"],
     queryFn: () => {
@@ -50,7 +50,7 @@ export function useSubject(id: string | undefined) {
 }
 
 export function useChapters(subjectId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: subjectId
       ? courseKeys.chapters(subjectId)
@@ -64,7 +64,7 @@ export function useChapters(subjectId: string | undefined) {
 }
 
 export function useChapter(id: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: id ? courseKeys.chapter(id) : ["course", "chapter", "noop"],
     queryFn: () => {
@@ -76,7 +76,7 @@ export function useChapter(id: string | undefined) {
 }
 
 export function useTopics(chapterId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: chapterId
       ? courseKeys.topics(chapterId)
@@ -90,7 +90,7 @@ export function useTopics(chapterId: string | undefined) {
 }
 
 export function useTopic(id: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: id ? courseKeys.topic(id) : ["course", "topic", "noop"],
     queryFn: () => {
@@ -102,7 +102,7 @@ export function useTopic(id: string | undefined) {
 }
 
 export function useContents(topicId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: topicId
       ? courseKeys.contents(topicId)
@@ -116,7 +116,7 @@ export function useContents(topicId: string | undefined) {
 }
 
 export function useContent(id: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: id ? courseKeys.content(id) : ["course", "content", "noop"],
     queryFn: () => {

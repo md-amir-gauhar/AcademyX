@@ -8,7 +8,7 @@ import {
   listMyBatches,
   type ListBatchesQuery,
 } from "@/services/batchService";
-import { useAuthStore } from "@/store/authStore";
+import { useIsAuthed } from "@/hooks/useIsAuthed";
 import type { ApiRequestError } from "@/lib/api/errors";
 
 export const batchKeys = {
@@ -21,7 +21,7 @@ export const batchKeys = {
 };
 
 export function useBatches(q: ListBatchesQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: batchKeys.list(q),
     queryFn: () => listBatches(q),
@@ -31,7 +31,7 @@ export function useBatches(q: ListBatchesQuery = {}) {
 }
 
 export function useMyBatches(q: ListBatchesQuery = {}) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: batchKeys.mine(q),
     queryFn: () => listMyBatches(q),
@@ -41,7 +41,7 @@ export function useMyBatches(q: ListBatchesQuery = {}) {
 }
 
 export function useBatch(idOrSlug: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: idOrSlug ? batchKeys.detail(idOrSlug) : ["batches", "detail", "noop"],
     queryFn: () => {
@@ -59,7 +59,7 @@ export function useBatch(idOrSlug: string | undefined) {
 }
 
 export function useBatchSchedules(batchId: string | undefined) {
-  const isAuthed = useAuthStore((s) => Boolean(s.accessToken && s.user));
+  const isAuthed = useIsAuthed();
   return useQuery({
     queryKey: batchId
       ? batchKeys.schedules(batchId)

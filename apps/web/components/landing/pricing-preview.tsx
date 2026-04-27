@@ -6,51 +6,7 @@ import { Check, Sparkles } from "lucide-react";
 import { SectionHeading } from "@/components/brand/section-heading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const PLANS = [
-  {
-    name: "Starter",
-    price: "Free",
-    tagline: "Explore the platform",
-    features: [
-      "3 free batches",
-      "AI assistant — 10 questions / day",
-      "Basic analytics",
-      "Community access",
-    ],
-    cta: "Get started",
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: "₹2,499",
-    period: "/ mo",
-    tagline: "For serious aspirants",
-    features: [
-      "All batches + live classes",
-      "Unlimited AI assistant",
-      "Full test series + analytics",
-      "Mentor Q&A priority",
-      "Offline downloads",
-    ],
-    cta: "Start Pro",
-    highlight: true,
-  },
-  {
-    name: "Institute",
-    price: "Custom",
-    tagline: "For schools & coaching",
-    features: [
-      "Unlimited seats",
-      "Custom branding & domain",
-      "Admin & analytics dashboard",
-      "Priority support",
-      "Bulk licensing",
-    ],
-    cta: "Talk to sales",
-    highlight: false,
-  },
-];
+import { PLANS } from "@/components/landing/data";
 
 export function PricingPreview() {
   return (

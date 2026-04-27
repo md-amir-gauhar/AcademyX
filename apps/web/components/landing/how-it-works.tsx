@@ -1,29 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Compass, GraduationCap, Rocket } from "lucide-react";
 import { SectionHeading } from "@/components/brand/section-heading";
-
-const STEPS = [
-  {
-    icon: Compass,
-    title: "Discover your path",
-    description:
-      "Tell us what you want to master — our platform curates a batch of courses, live sessions and daily goals built for your goal.",
-  },
-  {
-    icon: GraduationCap,
-    title: "Learn with mentors",
-    description:
-      "Attend live classes, watch replays, ask doubts inline, take tests and climb the leaderboard — guided by top educators.",
-  },
-  {
-    icon: Rocket,
-    title: "Track & accelerate",
-    description:
-      "Streaks, XP, insights and personalised recommendations keep you showing up. Progress is visible, measurable and celebrated.",
-  },
-];
+import { STEPS } from "@/components/landing/data";
 
 export function HowItWorks() {
   return (

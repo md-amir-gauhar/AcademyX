@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Compass, GraduationCap, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isActivePath } from "@/lib/ui-helpers";
 
 const TABS = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -18,9 +19,7 @@ export function MobileBottomNav() {
   return (
     <nav className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-border/60 bg-background/90 backdrop-blur-xl lg:hidden">
       {TABS.map((t) => {
-        const active =
-          pathname === t.href ||
-          (t.href !== "/" && pathname.startsWith(`${t.href}/`));
+        const active = isActivePath(pathname, t.href);
         return (
           <Link
             key={t.href}

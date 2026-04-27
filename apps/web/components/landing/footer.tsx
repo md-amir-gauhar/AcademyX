@@ -5,45 +5,7 @@ import { Github, Instagram, Twitter, Youtube } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { useOrgConfig } from "@/hooks/useOrgConfig";
 import { env } from "@/lib/env";
-
-const LINKS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
-  {
-    title: "Product",
-    links: [
-      { href: "#features", label: "Features" },
-      { href: "#pricing", label: "Pricing" },
-      { href: "#how-it-works", label: "How it works" },
-      { href: "/sign-in", label: "Start free" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { href: "#", label: "About" },
-      { href: "#", label: "Careers" },
-      { href: "#", label: "Press" },
-      { href: "#", label: "Contact" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { href: "#faq", label: "FAQ" },
-      { href: "#", label: "Blog" },
-      { href: "#", label: "Help center" },
-      { href: "#", label: "Status" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { href: "#", label: "Terms" },
-      { href: "#", label: "Privacy" },
-      { href: "#", label: "Cookies" },
-      { href: "#", label: "Security" },
-    ],
-  },
-];
+import { FOOTER_LINKS } from "@/components/landing/data";
 
 export function Footer() {
   const { config } = useOrgConfig();
@@ -75,7 +37,7 @@ export function Footer() {
           </div>
 
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {LINKS.map((group) => (
+            {FOOTER_LINKS.map((group) => (
               <div key={group.title}>
                 <div className="text-sm font-semibold">{group.title}</div>
                 <ul className="mt-3 space-y-2">

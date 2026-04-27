@@ -1,82 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Brain,
-  Flame,
-  MessageSquare,
-  PlayCircle,
-  Trophy,
-  Video,
-  Zap,
-} from "lucide-react";
 import { SectionHeading } from "@/components/brand/section-heading";
 import { cn } from "@/lib/utils";
-
-const FEATURES = [
-  {
-    icon: PlayCircle,
-    title: "Adaptive video lessons",
-    description:
-      "Pick up exactly where you left off — with speed control, bookmarks, and auto-generated transcripts.",
-    tone: "indigo",
-    span: "sm:col-span-2",
-  },
-  {
-    icon: Brain,
-    title: "AI study assistant",
-    description: "Ask any doubt, get explained answers and practice sets.",
-    tone: "violet",
-  },
-  {
-    icon: Video,
-    title: "Live mentor classes",
-    description: "Scheduled sessions with top educators, replayable anytime.",
-    tone: "sky",
-  },
-  {
-    icon: Trophy,
-    title: "Quizzes & tests",
-    description:
-      "Timed exams, instant analytics, a beautiful question palette and result breakdown.",
-    tone: "emerald",
-    span: "sm:col-span-2",
-  },
-  {
-    icon: Flame,
-    title: "Streaks & XP",
-    description: "Daily goals, leaderboards and badges keep your motivation up.",
-    tone: "amber",
-  },
-  {
-    icon: MessageSquare,
-    title: "Community",
-    description: "Discussion threads, study groups and peer reactions.",
-    tone: "rose",
-  },
-  {
-    icon: BookOpen,
-    title: "Practice zone",
-    description: "Flashcards, drag-drop drills and a coding playground.",
-    tone: "indigo",
-  },
-  {
-    icon: Zap,
-    title: "Offline & mobile",
-    description: "Download lectures, review on the go — stays perfectly in sync.",
-    tone: "sky",
-  },
-];
-
-const toneBg: Record<string, string> = {
-  indigo: "from-indigo-500/15 to-indigo-500/5 text-indigo-500",
-  violet: "from-violet-500/15 to-violet-500/5 text-violet-500",
-  sky: "from-sky-500/15 to-sky-500/5 text-sky-500",
-  emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-500",
-  amber: "from-amber-500/15 to-amber-500/5 text-amber-600",
-  rose: "from-rose-500/15 to-rose-500/5 text-rose-500",
-};
+import { FEATURES } from "@/components/landing/data";
+import { getToneClasses } from "@/lib/ui-helpers";
 
 export function Features() {
   return (
@@ -109,7 +37,7 @@ export function Features() {
               <div
                 className={cn(
                   "inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br",
-                  toneBg[f.tone]
+                  getToneClasses(f.tone).gradient
                 )}
               >
                 <f.icon className="h-5 w-5" />

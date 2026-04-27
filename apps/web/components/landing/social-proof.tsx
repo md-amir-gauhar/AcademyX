@@ -1,17 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-const LOGOS = [
-  "IIT Delhi",
-  "BITS Pilani",
-  "NIT Trichy",
-  "VIT Vellore",
-  "Chaitanya",
-  "Allen",
-  "Aakash",
-  "FIIT",
-];
+import { SOCIAL_PROOF_LOGOS } from "@/components/landing/data";
 
 export function SocialProof() {
   return (
@@ -26,7 +16,7 @@ export function SocialProof() {
             transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
             className="flex w-max items-center gap-12"
           >
-            {[...LOGOS, ...LOGOS].map((name, i) => (
+            {[...SOCIAL_PROOF_LOGOS, ...SOCIAL_PROOF_LOGOS].map((name, i) => (
               <span
                 key={`${name}-${i}`}
                 className="whitespace-nowrap text-xl font-semibold tracking-tight text-muted-foreground/70 sm:text-2xl"

@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PriceBlock } from "@/components/shared/price-block";
 import { EmptyState } from "@/components/shared/empty-state";
-import { GradientOrb } from "@/components/brand/gradient-orb";
+import { ProductHero } from "@/components/shared/product-hero";
 import { EnrollButton } from "@/features/discover/enroll-button";
 import { HtmlContent } from "@/components/shared/html-content";
 import { useTestSeries, useTestsInSeries } from "@/hooks/useTestSeries";
@@ -79,77 +79,71 @@ export function TestSeriesDetail({ slug }: TestSeriesDetailProps) {
         <ArrowLeft className="h-4 w-4" /> All tests
       </Link>
 
-      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-brand p-6 text-white shadow-glow sm:p-10">
-        <GradientOrb
-          color="sky"
-          size="xl"
-          className="-top-20 -right-20 opacity-60"
-        />
-        <div className="relative grid gap-8 lg:grid-cols-[2fr_1fr] lg:items-center">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {series.exam && (
-                <Badge className="border-transparent bg-white/20 text-white">
-                  {series.exam}
-                </Badge>
-              )}
-              {isFree && <Badge variant="success">Free</Badge>}
-              {isEnrolled && <Badge variant="success">Enrolled</Badge>}
-            </div>
-            <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              {series.title}
-            </h1>
-            {series.description && (
-              <HtmlContent
-                html={series.description}
-                variant="prose"
-                className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
-              />
+      <ProductHero
+        title={series.title}
+        description={
+          series.description ? (
+            <HtmlContent
+              html={series.description}
+              variant="prose"
+              className="max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
+            />
+          ) : undefined
+        }
+        badges={
+          <>
+            {series.exam && (
+              <Badge className="border-transparent bg-white/20 text-white">
+                {series.exam}
+              </Badge>
             )}
-          </div>
-
-          <Card className="bg-background/95 text-foreground shadow-soft backdrop-blur">
-            <div className="space-y-5 p-6">
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {isFree ? "Price" : "One-time payment"}
-                </p>
-                <PriceBlock
-                  total={series.totalPrice}
-                  discounted={series.discountedPrice}
-                  discountPercentage={series.discountPercentage}
-                  size="lg"
-                  isFree={isFree}
-                />
-              </div>
-              <EnrollButton
-                kind="TEST_SERIES"
-                id={series.id}
-                name={series.title}
+            {isFree && <Badge variant="success">Free</Badge>}
+            {isEnrolled && <Badge variant="success">Enrolled</Badge>}
+          </>
+        }
+        priceBlock={
+          <>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {isFree ? "Price" : "One-time payment"}
+              </p>
+              <PriceBlock
+                total={series.totalPrice}
+                discounted={series.discountedPrice}
+                discountPercentage={series.discountPercentage}
+                size="lg"
                 isFree={isFree}
-                isEnrolled={isEnrolled}
-                className="w-full"
               />
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                {series.durationDays && (
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-success" />
-                    {series.durationDays} days access
-                  </li>
-                )}
-                <li className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Full analytics & leaderboard
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  Instant scoring & solutions
-                </li>
-              </ul>
             </div>
-          </Card>
-        </div>
-      </section>
+            <EnrollButton
+              kind="TEST_SERIES"
+              id={series.id}
+              name={series.title}
+              isFree={isFree}
+              isEnrolled={isEnrolled}
+              className="w-full"
+            />
+          </>
+        }
+        features={[
+          ...(series.durationDays
+            ? [
+                {
+                  icon: <ShieldCheck className="h-4 w-4 text-success" />,
+                  label: `${series.durationDays} days access`,
+                },
+              ]
+            : []),
+          {
+            icon: <Sparkles className="h-4 w-4 text-primary" />,
+            label: "Full analytics & leaderboard",
+          },
+          {
+            icon: <CheckCircle2 className="h-4 w-4 text-success" />,
+            label: "Instant scoring & solutions",
+          },
+        ]}
+      />
 
       <section className="space-y-5">
         <div className="flex items-end justify-between">

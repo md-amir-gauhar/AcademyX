@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/brand/logo";
+import { isActivePath } from "@/lib/ui-helpers";
 
 const NAV: Array<{
   label: string;
@@ -84,9 +85,7 @@ function NavLink({
   item: { label: string; href: string; icon: React.ComponentType<{ className?: string }>; soon?: boolean };
   pathname: string;
 }) {
-  const active =
-    pathname === item.href ||
-    (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+  const active = isActivePath(pathname, item.href);
   return (
     <Link
       href={item.soon ? "#" : item.href}
