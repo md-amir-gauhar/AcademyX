@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Select,
   SelectContent,
@@ -136,11 +136,11 @@ export function BatchFormDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
+            <RichTextEditor
               id="description"
               name="description"
               defaultValue={editing?.description ?? ""}
-              rows={3}
+              placeholder="What will students learn? Highlight key features, schedule, perks..."
             />
           </div>
           <DialogFooter>

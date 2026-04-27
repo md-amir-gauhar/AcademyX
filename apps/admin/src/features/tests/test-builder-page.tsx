@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { HtmlContent } from "@/components/ui/html-content";
 import {
   ArrowLeft,
   ChevronRight,
@@ -119,9 +120,10 @@ export function TestBuilderPage() {
             </span>
           </div>
           {test.description && (
-            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-              {test.description}
-            </p>
+            <HtmlContent
+              html={test.description}
+              className="mt-2 line-clamp-3 text-muted-foreground"
+            />
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">

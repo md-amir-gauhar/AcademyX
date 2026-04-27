@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Dialog,
   DialogContent,
@@ -106,11 +106,11 @@ export function TestFormDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
+            <RichTextEditor
               id="description"
               name="description"
               defaultValue={editing?.description ?? ""}
-              rows={2}
+              placeholder="Brief overview shown to students before they start..."
             />
           </div>
           <DialogFooter>
