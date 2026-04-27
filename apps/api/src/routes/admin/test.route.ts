@@ -43,7 +43,8 @@ const createTestSchema = z.object({
   testSeriesId: z.string().uuid(),
   title: z.string().min(1).max(500),
   description: z.any().optional(),
-  slug: z.string().min(1).max(255),
+  // Optional — backend auto-generates from `title` when not provided.
+  slug: z.string().min(1).max(255).optional(),
   instructions: z.any().optional(),
   durationMinutes: z.number().int().positive(),
   totalMarks: z.number().positive(),

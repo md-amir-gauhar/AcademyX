@@ -75,7 +75,6 @@ export function TestSeriesPage() {
     const discount = Number(fd.get("discountPercentage"));
     const body: Record<string, unknown> = {
       title: fd.get("title"),
-      slug: fd.get("slug"),
       exam: fd.get("exam"),
       totalPrice,
       discountPercentage: Number.isFinite(discount) ? discount : undefined,

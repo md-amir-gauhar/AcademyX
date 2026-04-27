@@ -12,11 +12,13 @@ import {
   UpdateTestSeriesParams,
   calculateDiscountedPrice,
 } from "../shared/test-series-helpers";
+import { generateSlug } from "../shared/slug";
 
 /**
  * Create a new test series (Admin)
  */
 export async function createTestSeries(data: CreateTestSeriesParams) {
+  const slug = data.slug?.trim() || generateSlug(data.title);
   const [series] = await db
     .insert(testSeries)
     .values({
@@ -24,7 +26,7 @@ export async function createTestSeries(data: CreateTestSeriesParams) {
       exam: data.exam,
       title: data.title,
       description: data.description,
-      slug: data.slug,
+      slug,
       imageUrl: data.imageUrl,
       faq: data.faq,
       totalPrice: data.totalPrice,
@@ -143,26 +145,43 @@ export async function getAllTestSeries(
 
 /**
  * Update test series (Admin)
+ *
+ * If the title changes and no explicit slug was provided, the slug is
+ * regenerated from the new title to keep them aligned (mirrors the batch
+ * service behavior).
  */
 export async function updateTestSeries(
   id: string,
   organizationId: string,
   data: UpdateTestSeriesParams
 ) {
+  const existing = await db.query.testSeries.findFirst({
+    where: and(
+      eq(testSeries.id, id),
+      eq(testSeries.organizationId, organizationId)
+    ),
+  });
+
+  if (!existing) {
+    throw new Error("Test series not found");
+  }
+
+  const updateData: UpdateTestSeriesParams & { updatedAt: Date } = {
+    ...data,
+    updatedAt: new Date(),
+  };
+
+  if (data.title && data.title !== existing.title && !data.slug) {
+    updateData.slug = generateSlug(data.title);
+  }
+
   const [updated] = await db
     .update(testSeries)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(
       and(eq(testSeries.id, id), eq(testSeries.organizationId, organizationId))
     )
     .returning();
-
-  if (!updated) {
-    throw new Error("Test series not found");
-  }
 
   // Invalidate cache
   await CacheManager.invalidateTestSeries(id, organizationId);

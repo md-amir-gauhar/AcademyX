@@ -51,7 +51,8 @@ const createTestSeriesSchema = z.object({
   ]),
   title: z.string().min(3).max(255),
   description: z.any().optional(),
-  slug: z.string().min(3).max(255),
+  // Optional — backend auto-generates from `title` when not provided.
+  slug: z.string().min(3).max(255).optional(),
   imageUrl: z.string().url().optional(),
   faq: z.any().optional(),
   totalPrice: z.number().min(0),

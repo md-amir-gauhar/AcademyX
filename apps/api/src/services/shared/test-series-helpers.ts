@@ -17,7 +17,8 @@ export interface CreateTestSeriesParams {
   exam: ExamType;
   title: string;
   description?: any;
-  slug: string;
+  /** Optional. Auto-generated from title when omitted. */
+  slug?: string;
   imageUrl?: string;
   faq?: any;
   totalPrice: number;

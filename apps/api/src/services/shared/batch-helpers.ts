@@ -1,14 +1,6 @@
 // Shared helper functions for batch services
 
-// Helper function to generate slug from name
-export function generateSlug(name: string): string {
-  const baseSlug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  const timestamp = Date.now().toString(36);
-  return `${baseSlug}-${timestamp}`;
-}
+export { generateSlug } from "./slug";
 
 // Helper function to calculate validity in days
 export function calculateValidity(startDate: Date, endDate: Date): number {

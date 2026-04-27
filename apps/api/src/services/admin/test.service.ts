@@ -8,13 +8,15 @@ import {
 } from "../../db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { CacheManager } from "../cache.service";
+import { generateSlug } from "../shared/slug";
 
 interface CreateTestParams {
   testSeriesId: string;
   organizationId: string;
   title: string;
   description?: any;
-  slug: string;
+  /** Optional. Auto-generated from title when omitted. */
+  slug?: string;
   instructions?: any;
   durationMinutes: number;
   totalMarks: number;
@@ -56,6 +58,7 @@ export async function createTest(data: CreateTestParams) {
     throw new Error("Test series not found");
   }
 
+  const slug = data.slug?.trim() || generateSlug(data.title);
   const [test] = await db
     .insert(tests)
     .values({
@@ -63,7 +66,7 @@ export async function createTest(data: CreateTestParams) {
       organizationId: data.organizationId,
       title: data.title,
       description: data.description,
-      slug: data.slug,
+      slug,
       instructions: data.instructions,
       durationMinutes: data.durationMinutes,
       totalMarks: data.totalMarks,
@@ -126,24 +129,37 @@ export async function getTest(identifier: string, organizationId: string) {
 
 /**
  * Update test
+ *
+ * Regenerates the slug from the new title when the title changes and the
+ * caller did not pass an explicit slug.
  */
 export async function updateTest(
   id: string,
   organizationId: string,
   data: UpdateTestParams
 ) {
-  const [updated] = await db
-    .update(tests)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(tests.id, id), eq(tests.organizationId, organizationId)))
-    .returning();
+  const existing = await db.query.tests.findFirst({
+    where: and(eq(tests.id, id), eq(tests.organizationId, organizationId)),
+  });
 
-  if (!updated) {
+  if (!existing) {
     throw new Error("Test not found");
   }
+
+  const updateData: UpdateTestParams & { updatedAt: Date } = {
+    ...data,
+    updatedAt: new Date(),
+  };
+
+  if (data.title && data.title !== existing.title && !data.slug) {
+    updateData.slug = generateSlug(data.title);
+  }
+
+  const [updated] = await db
+    .update(tests)
+    .set(updateData)
+    .where(and(eq(tests.id, id), eq(tests.organizationId, organizationId)))
+    .returning();
 
   // Invalidate caches
   await CacheManager.invalidateTest(id, updated.testSeriesId, organizationId);
