@@ -19,6 +19,9 @@ import { CurriculumPage } from "@/features/subjects/curriculum-page";
 import { SchedulesPage } from "@/features/schedules/schedules-page";
 import { TestSeriesPage } from "@/features/test-series/test-series-page";
 import { TestsPage } from "@/features/tests/tests-page";
+import { TestBuilderPage } from "@/features/tests/test-builder-page";
+import { CreateQuestionsPage } from "@/features/tests/create-questions-page";
+import { EditQuestionPage } from "@/features/tests/edit-question-page";
 import { UsersPage } from "@/features/users/users-page";
 import { SettingsPage } from "@/features/org-config/settings-page";
 import { CachePage } from "@/features/cache/cache-page";
@@ -70,6 +73,18 @@ export function App() {
               <Route path="/schedules" element={<SchedulesPage />} />
               <Route path="/test-series" element={<TestSeriesPage />} />
               <Route path="/tests" element={<TestsPage />} />
+              <Route
+                path="/tests/:testId/builder"
+                element={<TestBuilderPage />}
+              />
+              <Route
+                path="/tests/:testId/sections/:sectionId/questions/new"
+                element={<CreateQuestionsPage />}
+              />
+              <Route
+                path="/tests/questions/:questionId/edit"
+                element={<EditQuestionPage />}
+              />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/cache" element={<CachePage />} />
